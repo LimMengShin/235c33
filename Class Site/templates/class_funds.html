@@ -15,9 +15,9 @@
         <tbody>
             {% for fund in funds %}
             <tr>
-                <td>{{ fund["id"] }}</td>
-                <td>{{ fund["name"] }}</td>
-                <td>{{ fund["funds"] }}</td>
+                <td>{{ fund[0] }}</td>
+                <td>{{ fund[1] }}</td>
+                <td>{{ fund[2] }}</td>
             </tr>
             {% endfor %}
         </tbody>
