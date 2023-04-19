@@ -32,7 +32,6 @@ def index():
 def reset():
     with sqlite3.connect("class_funds.db") as con:
         cur = con.cursor()
-        #cur.execute("CREATE TABLE class_funds (id INT, name TEXT, funds INT)")
         cur.execute("DELETE FROM class_funds")
         for idx, name in enumerate(NAMES):
             cur.execute("INSERT INTO class_funds (id, name, funds) VALUES (?, ?, ?)", (idx+1, name, 0))
@@ -45,11 +44,8 @@ def funds():
     with sqlite3.connect("class_funds.db") as con:
         cur = con.cursor()
         funds = [list(fund) for fund in cur.execute("SELECT * from class_funds").fetchall()]
-            
-        if request.method == "GET":
-            return render_template("class_funds.html", funds=funds, groups=GROUPS)
-            
-        elif request.method == "POST":
+
+        if request.method == "POST":
             group = request.form.get("group")
             amt = request.form.get("amt")
             if not group or group not in GROUPS or not amt or not amt_is_valid(amt):
@@ -73,5 +69,5 @@ def funds():
                     cur.execute("UPDATE class_funds SET funds = ? WHERE id = ?", (fund[2], fund[0]))
             funds = [list(fund) for fund in cur.execute("SELECT * from class_funds").fetchall()]
 
-            return render_template("class_funds.html", funds=funds, groups=GROUPS)
+        return render_template("class_funds.html", funds=funds, groups=GROUPS)
     
