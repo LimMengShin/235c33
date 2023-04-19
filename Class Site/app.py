@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
+from flask_bootstrap import Bootstrap
 import sqlite3
 
 app = Flask(__name__)
+Bootstrap(app)
 
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin', 'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden', 'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
 funds = {}
@@ -20,7 +22,26 @@ def reset():
         cur.execute("DELETE FROM class_funds")
         for idx, name in enumerate(NAMES):
             cur.execute("INSERT INTO class_funds (id, name, funds) VALUES (?, ?, ?)", (idx+1, name, 0))
-        funds = cur.execute("SELECT * FROM class_funds").fetchall()
         con.commit()
-    return render_template("class_funds.html", funds=funds)
+    return redirect("/funds")
 
+
+@app.route("/funds", methods=["GET", "POST"])
+def funds():
+    with sqlite3.connect("class_funds.db") as con:
+        cur = con.cursor()
+        funds = cur.execute("SELECT * from class_funds").fetchall()
+        con.commit()
+
+    if request.method == "GET":
+        return render_template("class_funds.html", funds=funds)
+            
+    elif request.method == "POST":
+        group = request.form.get("group")
+        amt = request.form.get("amt")
+        if not amt.isdigit():
+            return
+        elif not group:
+            return
+
+        return render_template("class_funds.html", funds=funds, group=group, amt=amt)

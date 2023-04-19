@@ -1,8 +1,8 @@
 {% extends "layout.html" %}
 
 {% block body %}
-
-    <h1>Class Funds</h1>
+<h1>Class Funds</h1>
+<div class="funds_display">
     <table>
         <col style="width:25%">
         <col style="width:45%">
@@ -24,5 +24,20 @@
             {% endfor %}
         </tbody>
     </table>
+</div>
 
+<div class="submission">
+    <span>
+        <form action="/funds" method="post">
+            <select name="group">
+                <option disabled selected value="">Select an option</option>
+                <option value="etasds">Test option</option>
+            </select>
+            <input type="number" name="amt" placeholder="Amount">
+            <input type="submit" value="Update">
+        </form>
+    </span>
+</div>
+
+<div class="clearfix"></div>
 {% endblock %}
