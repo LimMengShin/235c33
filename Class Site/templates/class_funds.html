@@ -2,14 +2,14 @@
 
 {% block body %}
 <h1>Class Funds</h1>
-<div class="funds_display">
-    <table>
-        <col style="width:25%">
-        <col style="width:45%">
+<div id="mytable">
+    <table class="table-striped table table-bordered">
+        <col style="width:20%">
+        <col style="width:50%">
         <col style="width:30%">
         <thead>
             <tr>
-                <th>Index number</th>
+                <th>Index #</th>
                 <th>Name</th>
                 <th>Funds</th>
             </tr>
@@ -29,7 +29,7 @@
 <div class="submission">
     <span>
         <form action="/funds" method="post">
-            <select name="group">
+            <select name="group" class="custom-select d-flex">
                 <option disabled selected value="">Select an option</option>
                 <option value="etasds">Test option</option>
             </select>
