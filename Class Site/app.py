@@ -3,7 +3,9 @@ import sqlite3
 
 app = Flask(__name__)
 
+
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin', 'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden', 'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
+GROUPS = ['h2_physics', 'h2_math', 'h2_econs', 'h2_comp']
 funds = {}
 
 
@@ -32,7 +34,7 @@ def funds():
         con.commit()
 
     if request.method == "GET":
-        return render_template("class_funds.html", funds=funds)
+        return render_template("class_funds.html", funds=funds, groups=GROUPS)
             
     elif request.method == "POST":
         group = request.form.get("group")
@@ -42,4 +44,5 @@ def funds():
         elif not group:
             return
 
-        return render_template("class_funds.html", funds=funds, group=group, amt=amt)
+        return render_template("class_funds.html", funds=funds, groups=GROUPS, amt=amt)
+    

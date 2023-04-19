@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block body %}
-<h1>Class Funds</h1>
+<h1>5C33 Class Funds</h1>
 <div id="mytable">
     <table class="table-striped table table-bordered">
         <col style="width:20%">
@@ -25,16 +25,25 @@
         </tbody>
     </table>
 </div>
-
 <div class="submission">
     <span>
-        <form action="/funds" method="post">
-            <select name="group" class="custom-select d-flex">
-                <option disabled selected value="">Select an option</option>
-                <option value="etasds">Test option</option>
-            </select>
-            <input type="number" name="amt" placeholder="Amount">
-            <input type="submit" value="Update">
+        <form action="/funds" method="post" class="form-inline">
+            <div class="form-group mb-2">
+                <select name="group" class="custom-select">
+                    <option disabled selected value="">Select an option</option>
+                    <option value="class-ded">Class Minus</option>
+                    <option value="class-add">Class Top Up</option>
+                    {% for group in groups %}
+                        <option value="{{ group }}">{{ group }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group mx-sm-4 mb-2">
+                <input type="text" name="amt" placeholder="Amount" class="form-control">
+            </div>
+            <div class="form-group mb-2">
+                <input type="submit" value="Update Funds" class="btn btn-primary">
+            </div>
         </form>
     </span>
 </div>
