@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, flash
 import sqlite3
 
 def amt_is_valid(amt):
@@ -10,6 +10,7 @@ def amt_is_valid(amt):
         return True
 
 app = Flask(__name__)
+app.secret_key = "secret key"
 
 
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin', 'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden', 'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
@@ -53,7 +54,7 @@ def funds():
             group = request.form.get("group")
             amt = request.form.get("amt")
             if not group or group not in GROUPS or not amt or not amt_is_valid(amt):
-                return "failure"
+                flash('Error! Try again.')
             else:
                 amt = float(amt)*100
                 if group == "Class Add":
