@@ -23,3 +23,4 @@ def reset():
         funds = cur.execute("SELECT * FROM class_funds").fetchall()
         con.commit()
     return render_template("class_funds.html", funds=funds)
+
