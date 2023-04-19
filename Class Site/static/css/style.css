@@ -4,8 +4,8 @@ body {
 
 #mytable {
     float: left;
-    width: 50vw;
-    margin-left: 7vw;
+    width: 45vw;
+    margin-left: 2vw;
 }
 
 #mytable table thead th {
@@ -13,14 +13,9 @@ body {
 
 }
 
-.funds_display {
-    float: left;
-    width: 65%;
-}
-
 .submission {
     float: left;
-    margin-left: 50px;
+    margin-left: 2vw;
 }
 
 .clearfix {
