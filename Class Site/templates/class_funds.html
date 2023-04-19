@@ -19,7 +19,7 @@
             <tr>
                 <td>{{ fund[0] }}</td>
                 <td>{{ fund[1] }}</td>
-                <td>{{ fund[2] }}</td>
+                <td>{{ "{:.2f}".format(fund[2]/100) }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -31,7 +31,9 @@
         <form action="/funds" method="post">
             <select name="group" class="custom-select d-flex">
                 <option disabled selected value="">Select an option</option>
-                <option value="etasds">Test option</option>
+                {% for group in groups %}
+                    <option value="{{ group }}"> {{ group }} </option>
+                {% endfor %}
             </select>
             <input type="number" name="amt" placeholder="Amount">
             <input type="submit" value="Update">
