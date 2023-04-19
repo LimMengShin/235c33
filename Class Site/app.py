@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin', 'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden', 'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
-GROUPS = ['Add', 'Subtract', 'H2 Physics', 'H2 Mathematics', 'H2 Economics', 'H2 Computing']
+GROUPS = ['Class Add', 'Class Subtract', 'H2 Physics', 'H2 Mathematics', 'H2 Economics', 'H2 Computing']
 d = {
     'H2 Physics': 'h2_physics',
     'H2 Mathematics': 'h2_math',
@@ -56,10 +56,10 @@ def funds():
                 return "failure"
             else:
                 amt = float(amt)*100
-                if group == "Add":
+                if group == "Class Add":
                     for fund in funds:
                         fund[2] += int(amt)
-                elif group == "Subtract":
+                elif group == "Class Subtract":
                     for fund in funds:
                         fund[2] -= int(amt)
                 else:

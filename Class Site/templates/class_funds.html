@@ -31,8 +31,6 @@
             <div class="form-group mb-2">
                 <select name="group" class="custom-select">
                     <option disabled selected value="">Select an option</option>
-                    <option value="class-ded">Class Minus</option>
-                    <option value="class-add">Class Top Up</option>
                     {% for group in groups %}
                         <option value="{{ group }}">{{ group }}</option>
                     {% endfor %}
