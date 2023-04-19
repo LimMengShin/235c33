@@ -11,6 +11,7 @@ def amt_is_valid(amt):
 
 app = Flask(__name__)
 
+
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin', 'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden', 'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
 GROUPS = ['Add', 'Subtract', 'H2 Physics', 'H2 Mathematics', 'H2 Economics', 'H2 Computing']
 d = {
