@@ -34,8 +34,8 @@ def reset():
     with sqlite3.connect("class_funds.db") as con:
         cur = con.cursor()
         cur.execute("DELETE FROM class_funds")
-        for idx, name in enumerate(NAMES):
-            cur.execute("INSERT INTO class_funds (id, name, funds) VALUES (?, ?, ?)", (idx+1, name, 0))
+        cur.executemany("INSERT INTO class_funds (id, name, funds) VALUES (?, ?, ?)",
+                        ([idx+1, name, 0] for idx, name in enumerate(NAMES)))
         con.commit()
     return redirect("/funds")
 
@@ -83,9 +83,8 @@ def funds():
                         if (fund[0], fund[1]) in students:
                             fund[2] -= int(amt)
                 
-                for fund in funds:
-                    cur.execute("UPDATE class_funds SET funds = ? WHERE id = ?", (fund[2], fund[0]))
-            funds = [list(fund) for fund in cur.execute("SELECT * from class_funds").fetchall()]
+                cur.executemany("UPDATE class_funds SET funds = ? WHERE id = ?", ([fund[2], fund[0]] for fund in funds))
+                con.commit()
 
         return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
     
