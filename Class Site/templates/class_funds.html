@@ -30,9 +30,9 @@ onload="getOption()"
         <tbody>
             {% for fund in funds %}
             <tr>
-                <td>{{ fund[0] }}</td>
-                <td>{{ fund[1] }}</td>
-                <td>{{ "${:.2f}".format(fund[2]/100) }}</td>
+                <td>{{ fund["id"] }}</td>
+                <td>{{ fund["name"] }}</td>
+                <td>{{ "${:.2f}".format(fund["funds"]/100) }}</td>
             </tr>
             {% endfor %}
         </tbody>

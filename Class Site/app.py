@@ -34,9 +34,7 @@ def index():
 def reset():
     with sqlite3.connect("class_funds.db") as con:
         cur = con.cursor()
-        cur.execute("DELETE FROM class_funds")
-        cur.executemany("INSERT INTO class_funds (id, name, funds) VALUES (?, ?, ?)",
-                        ([idx+1, name, 0] for idx, name in enumerate(NAMES)))
+        cur.execute("UPDATE class_funds SET funds=0")
         con.commit()
     return redirect("/funds")
 
@@ -45,6 +43,7 @@ def reset():
 def funds():
     con = sqlite3.connect("class_funds.db")
     with con:
+        con.row_factory = sqlite3.Row
         cur = con.cursor()
 
         if request.method == "POST":
@@ -76,7 +75,7 @@ def funds():
 
                 else:
                     subject = d[group]
-                    students = [list(id) for id in cur.execute(f"SELECT id from {subject}").fetchall()]
+                    students = [di["id"] for di in cur.execute(f"SELECT id from {subject}").fetchall()]
                     con.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id[0]] for id in students))
                 
                 con.commit()
