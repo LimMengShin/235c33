@@ -76,7 +76,7 @@ def funds():
                 else:
                     subject = d[group]
                     students = [di["id"] for di in cur.execute(f"SELECT id from {subject}").fetchall()]
-                    con.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id[0]] for id in students))
+                    con.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
                 
                 con.commit()
 
@@ -85,3 +85,9 @@ def funds():
 
     return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
     
+
+@app.route("/edit", methods=["GET", "POST"])
+def edit():
+    if request.method == 'POST':
+        return
+    return render_template("edit.html")

@@ -20,6 +20,9 @@
                 <li class="nav-item {% if url_for(request.endpoint)=='/funds' %}active{% endif %}">
                   <a class="nav-link" href="/funds">Funds</a>
                 </li>
+                <li class="nav-item {% if url_for(request.endpoint)=='/edit' %}active{% endif %}">
+                  <a class="nav-link" href="/edit">Edit</a>
+                </li>
               </ul>
               <ul class="navbar-nav ml-auto">
                 <li class="nav-item dropdown">
