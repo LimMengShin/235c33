@@ -72,5 +72,5 @@ def funds():
                     cur.execute("UPDATE class_funds SET funds = ? WHERE id = ?", (fund[2], fund[0]))
             funds = [list(fund) for fund in cur.execute("SELECT * from class_funds").fetchall()]
 
-        return render_template("class_funds.html", funds=funds, groups=GROUPS)
+        return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
     

@@ -52,9 +52,9 @@ onload="getOption()"
             <div class="form-group mb-2" id="indv">
                 <select name="indv" class="custom-select">
                     <option disabled selected value="">Select an option</option>
-                    <option value="person1">person 1</option>
-                    <option value="person2">person 2</option>
-                    <option value="person3">person 3</option>
+                    {% for name in names %}
+                        <option value="{{ name }}">{{ name }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="form-group mx-sm-4 mb-2">
