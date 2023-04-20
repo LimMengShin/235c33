@@ -4,9 +4,9 @@ body {
 
 #mytable {
     float: left;
-    width: 45vw;
-    height: 90vh;
+    width: 50vw;
     margin-left: 2vw;
+    padding-top: 2vh;
 }
 
 .submission {
@@ -30,21 +30,17 @@ body {
     display: block;
     width: 100%;
     overflow: overlay;
-    height: 80vh;
+    height: 78vh;
 }
 
-#mytable tbody tr{
-    display: grid;
-    grid-template-columns: 1fr 2fr 2fr;
-}
-  
+#mytable tbody tr,
 #mytable thead tr {
     display: grid;
-    grid-template-columns: 1fr 2fr 2fr;
+    grid-template-columns: 0.5fr 2.5fr 1fr;
 }
   
 #mytable thead th,
 #mytable tbody th,
 #mytable tbody td {
-    padding: 12px 20px 12px 20px;
+    padding: 12px 15px 12px 10px;
 }
