@@ -4,7 +4,6 @@
 Class Funds
 {% endblock %}
 {% block body %}
-<h1>5C33 Class Funds</h1>
 <div class="container">
     {% for message in get_flashed_messages(e) %}
     <div class="alert alert-danger">
@@ -18,7 +17,7 @@ Class Funds
 
         <thead>
             <tr>
-                <th>Index #</th>
+                <th>#</th>
                 <th>Name</th>
                 <th>Funds</th>
             </tr>
@@ -35,24 +34,22 @@ Class Funds
     </table>
 </div>
 <div class="submission">
-    <span>
-        <form action="/funds" method="post" class="form-inline">
-            <div class="form-group mb-2">
-                <select name="group" class="custom-select">
-                    <option disabled selected value="">Select an option</option>
-                    {% for group in groups %}
-                        <option value="{{ group }}">{{ group }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group mx-sm-4 mb-2">
-                <input type="text" name="amt" placeholder="Amount" class="form-control">
-            </div>
-            <div class="form-group mb-2">
-                <input type="submit" value="Update Funds" class="btn btn-primary">
-            </div>
-        </form>
-    </span>
+    <form action="/funds" method="post" class="form-inline">
+        <div class="form-group mb-2">
+            <select name="group" class="custom-select">
+                <option disabled selected value="">Select an option</option>
+                {% for group in groups %}
+                    <option value="{{ group }}">{{ group }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group mx-sm-4 mb-2">
+            <input type="text" name="amt" placeholder="Amount" class="form-control">
+        </div>
+        <div class="form-group mb-2">
+            <input type="submit" value="Update Funds" class="btn btn-primary">
+        </div>
+    </form>
 </div>
 
 <div class="clearfix"></div>
