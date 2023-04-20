@@ -13,7 +13,9 @@ app = Flask(__name__)
 app.secret_key = "secret key"
 
 
-NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin', 'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden', 'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
+NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin',\
+        'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden',\
+        'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
 GROUPS = ['Class Add', 'Class Subtract', 'H2 Physics', 'H2 Mathematics', 'H2 Economics', 'H2 Computing', 'Individual Add', 'Individual Subtract']
 d = {
     'H2 Physics': 'h2_physics',
@@ -21,15 +23,14 @@ d = {
     'H2 Economics': 'h2_econs',
     'H2 Computing': 'h2_comp',
 }
-funds = []
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
 def index():
     return render_template("index.html")
 
 
-@app.route("/reset", methods=["GET", "POST"])
+@app.route("/reset")
 def reset():
     with sqlite3.connect("class_funds.db") as con:
         cur = con.cursor()
@@ -42,9 +43,9 @@ def reset():
 
 @app.route("/funds", methods=["GET", "POST"])
 def funds():
-    with sqlite3.connect("class_funds.db") as con:
+    con = sqlite3.connect("class_funds.db")
+    with con:
         cur = con.cursor()
-        funds = [list(fund) for fund in cur.execute("SELECT * from class_funds").fetchall()]
 
         if request.method == "POST":
             group = request.form.get("group")
@@ -57,34 +58,31 @@ def funds():
             else:
                 amt = float(amt)*100
                 if group == "Class Add":
-                    for fund in funds:
-                        fund[2] += int(amt)
+                    con.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
                 elif group == "Class Subtract":
-                    for fund in funds:
-                        fund[2] -= int(amt)
+                    con.execute("UPDATE class_funds SET funds=funds-?", (int(amt),))
+
                 elif group == "Individual Add":
                     student_name = request.form.get("indv")
                     if student_name not in NAMES:
                         flash('Error! Invalid student name.')
-                    for fund in funds:
-                        if fund[1] == student_name:
-                            fund[2] += int(amt)
+                    con.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
+
                 elif group == "Individual Subtract":
                     student_name = request.form.get("indv")
                     if student_name not in NAMES:
                         flash('Error! Invalid student name.')
-                    for fund in funds:
-                        if fund[1] == student_name:
-                            fund[2] -= int(amt)
+                    con.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
+
                 else:
                     subject = d[group]
-                    students = cur.execute(f"SELECT * from {subject}").fetchall()
-                    for fund in funds:
-                        if (fund[0], fund[1]) in students:
-                            fund[2] -= int(amt)
+                    students = [list(id) for id in cur.execute(f"SELECT id from {subject}").fetchall()]
+                    con.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id[0]] for id in students))
                 
-                cur.executemany("UPDATE class_funds SET funds = ? WHERE id = ?", ([fund[2], fund[0]] for fund in funds))
                 con.commit()
 
-        return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
+        funds = cur.execute("SELECT * from class_funds").fetchall()
+
+
+    return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
     
