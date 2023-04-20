@@ -78,7 +78,7 @@ def funds():
                             fund[2] -= int(amt)
                 else:
                     subject = d[group]
-                    students = cur.execute("SELECT * from ?", (subject)).fetchall()
+                    students = cur.execute(f"SELECT * from {subject}").fetchall()
                     for fund in funds:
                         if (fund[0], fund[1]) in students:
                             fund[2] -= int(amt)
