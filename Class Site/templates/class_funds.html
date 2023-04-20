@@ -3,6 +3,11 @@
 {% block title %}
 Class Funds
 {% endblock %}
+
+{% block onload %}
+onload="getOption()"
+{% endblock %}
+
 {% block body %}
 <div class="container">
     {% for message in get_flashed_messages(e) %}
@@ -71,10 +76,10 @@ Class Funds
         x = document.getElementById("indv");
         if (group === "Individual Add") {
             x.style.display = "inline";
+            x.style.float = "left";
         } else {
             x.style.display = "none";
         }
     }
 </script>
-
 {% endblock %}
