@@ -49,8 +49,10 @@ def funds():
         if request.method == "POST":
             group = request.form.get("group")
             amt = request.form.get("amt")
-            if not group or group not in GROUPS or not amt or not amt_is_valid(amt):
-                flash('Error! Try again.')
+            if group not in GROUPS:
+                flash('Error! Invalid group.')
+            elif not amt_is_valid(amt):
+                flash('Error! Invalid amount.')
             else:
                 amt = float(amt)*100
                 if group == "Class Add":

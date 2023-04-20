@@ -5,19 +5,46 @@ body {
 #mytable {
     float: left;
     width: 45vw;
+    height: 90vh;
     margin-left: 2vw;
-}
-
-#mytable table thead th {
-    vertical-align: middle;
-
 }
 
 .submission {
     float: left;
+    padding-top: 10vh;
     margin-left: 2vw;
 }
 
 .clearfix {
     clear: both;
+}
+
+
+#mytable {
+    table-layout: auto;
+    border-collapse: collapse;
+    text-align: left;
+}
+  
+#mytable tbody {
+    display: block;
+    width: 100%;
+    overflow: overlay;
+    height: 80vh;
+}
+
+#mytable tbody tr{
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr;
+}
+  
+#mytable thead tr {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr;
+}
+  
+#mytable thead th,
+#mytable tbody th,
+#mytable tbody td {
+    padding: 12px 20px 12px 20px;
 }

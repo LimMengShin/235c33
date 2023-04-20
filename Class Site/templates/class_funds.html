@@ -6,18 +6,16 @@ Class Funds
 {% block body %}
 <h1>5C33 Class Funds</h1>
 <div class="container">
-    {% for message in get_flashed_messages() %}
-    <div class="alert alert-warning">
+    {% for message in get_flashed_messages(e) %}
+    <div class="alert alert-danger">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
         {{ message }}
     </div>
     {% endfor %}
 </div>
 <div id="mytable">
-    <table class="table-striped table table-bordered">
-        <col style="width:18%">
-        <col style="width:52%">
-        <col style="width:30%">
+    <table id="fixed_header" class="table-striped table table-bordered">
+
         <thead>
             <tr>
                 <th>Index #</th>
