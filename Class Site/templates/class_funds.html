@@ -39,17 +39,16 @@ onload="getOption()"
     </table>
 </div>
 <div class="submission">
-        <form action="/funds" method="post" class="form-inline">
-            <div class="form-group mb-2">
+        <form action="/funds" method="post" class="form">
+            <div class="form-group d-sm-flex">
                 <select name="group" id="group" class="custom-select" onchange="getOption()">
                     <option disabled selected value="">Select an option</option>
                     {% for group in groups %}
                         <option value="{{ group }}">{{ group }}</option>
                     {% endfor %}
-                    <option value="Individual Add">Individual Add</option>
                 </select>
             </div>
-            <div class="form-group mb-2" id="indv">
+            <div class="form-group mr-2" id="indv">
                 <select name="indv" class="custom-select">
                     <option disabled selected value="">Select an option</option>
                     {% for name in names %}
@@ -57,10 +56,10 @@ onload="getOption()"
                     {% endfor %}
                 </select>
             </div>
-            <div class="form-group mx-sm-4 mb-2">
-                <input type="text" name="amt" placeholder="Amount" class="form-control">
+            <div class="form-group d-sm-flex">
+                <input autocomplete="off" autofocus type="text" name="amt" placeholder="Amount" class="form-control">
             </div>
-            <div class="form-group mb-2">
+            <div class="form-group">
                 <input type="submit" value="Update Funds" class="btn btn-primary">
             </div>
         </form>
@@ -74,7 +73,7 @@ onload="getOption()"
         selectElement = document.querySelector('#group');
         group = selectElement.value;
         x = document.getElementById("indv");
-        if (group === "Individual Add") {
+        if (group === "Individual Add" || group === "Individual Subtract") {
             x.style.display = "inline";
             x.style.float = "left";
         } else {
