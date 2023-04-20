@@ -42,7 +42,7 @@ onload="getOption()"
         <form action="/funds" method="post" class="form">
             <div class="form-group d-sm-flex">
                 <select name="group" id="group" class="custom-select" onchange="getOption()">
-                    <option disabled selected value="">Select an option</option>
+                    <option disabled selected value="">Select a group</option>
                     {% for group in groups %}
                         <option value="{{ group }}">{{ group }}</option>
                     {% endfor %}
@@ -50,7 +50,7 @@ onload="getOption()"
             </div>
             <div class="form-group mr-2" id="indv">
                 <select name="indv" class="custom-select">
-                    <option disabled selected value="">Select an option</option>
+                    <option disabled selected value="">Select a student</option>
                     {% for name in names %}
                         <option value="{{ name }}">{{ name }}</option>
                     {% endfor %}
