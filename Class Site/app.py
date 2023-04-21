@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, flash
 import sqlite3
+from datetime import datetime
 
 def amt_is_valid(amt):
     try:
@@ -39,46 +40,72 @@ def reset():
     return redirect("/funds")
 
 
+@app.route("/clear")
+def clear():
+    with sqlite3.connect("logs.db") as con2:
+        cur2 = con2.cursor()
+        cur2.execute("DELETE FROM logs")
+        con2.commit()
+    return redirect("/logs")
+
+
 @app.route("/funds", methods=["GET", "POST"])
 def funds():
-    con = sqlite3.connect("class_funds.db")
-    with con:
+    with sqlite3.connect("class_funds.db") as con:
         con.row_factory = sqlite3.Row
         cur = con.cursor()
 
         if request.method == "POST":
             group = request.form.get("group")
             amt = request.form.get("amt")
-
+            date1 = datetime.now().strftime("%Y%m%d%H%M%S%f")
+            date2 = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            num_affected = 0
             if group not in GROUPS:
                 flash('Error! Invalid group.')
             elif not amt_is_valid(amt):
                 flash('Error! Invalid amount.')
             else:
+                total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchall()[0]["SUM(funds)"]
                 amt = float(amt)*100
                 if group == "Class Add":
-                    con.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
+                    cur.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
+                    num_affected = len(NAMES)
+
                 elif group == "Class Subtract":
-                    con.execute("UPDATE class_funds SET funds=funds-?", (int(amt),))
+                    cur.execute("UPDATE class_funds SET funds=funds-?", (int(amt),))
+                    num_affected = len(NAMES)
 
                 elif group == "Individual Add":
                     student_name = request.form.get("indv")
                     if student_name not in NAMES:
                         flash('Error! Invalid student name.')
-                    con.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
+                    cur.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
+                    num_affected = 1
 
                 elif group == "Individual Subtract":
                     student_name = request.form.get("indv")
                     if student_name not in NAMES:
                         flash('Error! Invalid student name.')
-                    con.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
+                    cur.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
+                    num_affected = 1
 
                 else:
-                    subject = d[group]
-                    students = [di["id"] for di in cur.execute(f"SELECT id from {subject}").fetchall()]
-                    con.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
+                    grp = d[group]
+                    students = [di["id"] for di in cur.execute(f"SELECT id from {grp}").fetchall()]
+                    cur.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
+                    num_affected = len(cur.execute(f"SELECT * from {grp}").fetchall())
                 
                 con.commit()
+                total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchall()[0]["SUM(funds)"]
+                with sqlite3.connect("logs.db") as con2:
+                    con2.row_factory = sqlite3.Row
+                    cur2 = con2.cursor()
+                    cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (group, amt, num_affected*amt, total_before, total_after, num_affected, date1, date2))
+                    # logs = cur2.execute("SELECT * from logs").fetchall()
+                    # for i in logs:
+                    #     print(i)
+                    con2.commit()
 
         funds = cur.execute("SELECT * from class_funds").fetchall()
 
@@ -91,3 +118,11 @@ def edit():
     if request.method == 'POST':
         return
     return render_template("edit.html")
+
+@app.route("/logs", methods=["GET", "POST"])
+def logs():
+    with sqlite3.connect("logs.db") as con2:
+        con2.row_factory = sqlite3.Row
+        cur2 = con2.cursor()
+        logs = cur2.execute("SELECT * from logs").fetchall()
+    return render_template("logs.html", logs=logs)
