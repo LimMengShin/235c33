@@ -11,7 +11,7 @@ def amt_is_valid(amt):
 
 app = Flask(__name__)
 app.secret_key = "secret key"
-
+prevs = ["",0]
 
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin',\
         'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden',\
@@ -23,7 +23,7 @@ d = {
     'H2 Economics': 'h2_econs',
     'H2 Computing': 'h2_comp',
 }
-
+  
 
 @app.route("/")
 def index():
@@ -49,6 +49,7 @@ def funds():
         if request.method == "POST":
             group = request.form.get("group")
             amt = request.form.get("amt")
+            
 
             if group not in GROUPS:
                 flash('Error! Invalid group.')
@@ -56,6 +57,9 @@ def funds():
                 flash('Error! Invalid amount.')
             else:
                 amt = float(amt)*100
+                prevs[0] = group
+                prevs[1] = amt
+                print("Prevs:",prevs)
                 if group == "Class Add":
                     con.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
                 elif group == "Class Subtract":
@@ -82,9 +86,48 @@ def funds():
 
         funds = cur.execute("SELECT * from class_funds").fetchall()
 
+    return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
+
+
+
+@app.route("/undo",methods=["POST"])
+def undo():
+    group = prevs[0]
+    amt = -prevs[1]
+    print("Undo group:",group)
+    print("Undo amt:",amt)
+    con = sqlite3.connect("class_funds.db")
+    with con:
+        con.row_factory = sqlite3.Row
+        cur = con.cursor()
+        
+        if group == "Class Add":
+            con.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
+        elif group == "Class Subtract":
+            con.execute("UPDATE class_funds SET funds=funds-?", (int(amt),))
+
+        elif group == "Individual Add":
+            student_name = request.form.get("indv")
+            if student_name not in NAMES:
+                flash('Error! Invalid student name.')
+            con.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
+
+        elif group == "Individual Subtract":
+            student_name = request.form.get("indv")
+            if student_name not in NAMES:
+                flash('Error! Invalid student name.')
+            con.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
+
+        else:
+            subject = d[group]
+            students = [di["id"] for di in cur.execute(f"SELECT id from {subject}").fetchall()]
+            con.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
+        
+        con.commit()
+
+        funds = cur.execute("SELECT * from class_funds").fetchall()
 
     return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
-    
 
 @app.route("/edit", methods=["GET", "POST"])
 def edit():

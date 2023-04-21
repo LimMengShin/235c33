@@ -15,7 +15,7 @@ onload="getOption()"
         <button type="button" class="close" data-dismiss="alert">&times;</button>
         {{ message }}
     </div>
-    {% endfor %}
+    {% endfor %} 
 </div>
 <div id="mytable">
     <table id="fixed_header" class="table-striped table table-bordered">
@@ -63,11 +63,14 @@ onload="getOption()"
                 <input type="submit" value="Update Funds" class="btn btn-primary">
             </div>
         </form>
+        <form method="post" action="/undo">
+            <input type="submit" value="UNDO" name="undo" />
+        </form>
 </div>
 
 <div class="clearfix"></div>
 
-
+ 
 <script type="text/javascript">
     function getOption() {
         selectElement = document.querySelector('#group');
