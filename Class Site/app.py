@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, abort
 import sqlite3
 from datetime import datetime
 
@@ -13,12 +13,12 @@ def amt_is_valid(amt):
 app = Flask(__name__)
 app.secret_key = "secret key"
 prevs = ["",0]
-
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin',\
         'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden',\
         'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
 GROUPS = ['Class Add', 'Class Subtract', 'H2 Physics', 'H2 Mathematics', 'H2 Economics', 'H2 Computing', 'Individual Add', 'Individual Subtract']
 d = {
+
     'H2 Physics': 'h2_physics',
     'H2 Mathematics': 'h2_math',
     'H2 Economics': 'h2_econs',
@@ -60,16 +60,18 @@ def funds():
             amt = request.form.get("amt")
             date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             num_affected = 0
+
             if group not in GROUPS:
                 flash('Error! Invalid group.')
             elif not amt_is_valid(amt):
                 flash('Error! Invalid amount.')
             else:
-                total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchall()[0]["SUM(funds)"]
+                total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
                 amt = float(amt)*100
+            
                 prevs[0] = group
                 prevs[1] = amt
-                print("Prevs:",prevs)
+                
                 if group == "Class Add":
                     cur.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
                     num_affected = len(NAMES)
@@ -96,10 +98,12 @@ def funds():
                     grp = d[group]
                     students = [di["id"] for di in cur.execute(f"SELECT id from {grp}").fetchall()]
                     cur.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
-                    num_affected = len(cur.execute(f"SELECT * from {grp}").fetchall())
+                    num_affected = len(students)
                 
+                total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
+
                 con.commit()
-                total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchall()[0]["SUM(funds)"]
+
                 with sqlite3.connect("logs.db") as con2:
                     con2.row_factory = sqlite3.Row
                     cur2 = con2.cursor()
@@ -111,13 +115,13 @@ def funds():
     return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
 
 
-
-@app.route("/undo",methods=["POST"])
+@app.route("/undo", methods=["POST", "GET"])
 def undo():
+    if request.method == 'GET':
+        abort(404)
     group = prevs[0]
     amt = -prevs[1]
-    print("Undo group:",group)
-    print("Undo amt:",amt)
+
     con = sqlite3.connect("class_funds.db")
     with con:
         con.row_factory = sqlite3.Row
@@ -146,10 +150,11 @@ def undo():
             con.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
         
         con.commit()
+    
+    prevs = ["",0]
 
-        funds = cur.execute("SELECT * from class_funds").fetchall()
 
-    return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
+    return redirect("/funds")
 
 
 @app.route("/edit", methods=["GET", "POST"])
