@@ -62,9 +62,9 @@ def funds():
             num_affected = 0
 
             if group not in GROUPS:
-                flash('Error! Invalid group.')
+                flash('Error! Invalid group.', 'alert-danger')
             elif not amt_is_valid(amt):
-                flash('Error! Invalid amount.')
+                flash('Error! Invalid amount.', 'alert-danger')
             else:
                 total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
                 amt = float(amt)*100
@@ -83,20 +83,20 @@ def funds():
                 elif group == "Individual Add":
                     student_name = request.form.get("indv")
                     if student_name not in NAMES:
-                        flash('Error! Invalid student name.')
+                        flash('Error! Invalid student name.', 'alert-danger')
                     cur.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
                     num_affected = 1
 
                 elif group == "Individual Subtract":
                     student_name = request.form.get("indv")
                     if student_name not in NAMES:
-                        flash('Error! Invalid student name.')
+                        flash('Error! Invalid student name.', 'alert-danger')
                     cur.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
                     num_affected = 1
 
                 else:
                     grp = d[group]
-                    students = [di["id"] for di in cur.execute(f"SELECT id from {grp}").fetchall()]
+                    students = [di["id"] for di in cur.execute(f"SELECT id FROM {grp}").fetchall()]
                     cur.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
                     num_affected = len(students)
                 
@@ -109,8 +109,11 @@ def funds():
                     cur2 = con2.cursor()
                     cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date))
                     con2.commit()
+                
+                redirect("/funds")
+                flash("Successfully updated values. Didn't mean to? Click here to undo: ", "alert-success")
 
-        funds = cur.execute("SELECT * from class_funds").fetchall()
+        funds = cur.execute("SELECT * FROM class_funds").fetchall()
 
     return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
 
@@ -119,6 +122,7 @@ def funds():
 def undo():
     if request.method == 'GET':
         abort(404)
+
     group = prevs[0]
     amt = -prevs[1]
 
@@ -135,13 +139,13 @@ def undo():
         elif group == "Individual Add":
             student_name = request.form.get("indv")
             if student_name not in NAMES:
-                flash('Error! Invalid student name.')
+                flash('Error! Invalid student name.', 'alert-danger')
             con.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
 
         elif group == "Individual Subtract":
             student_name = request.form.get("indv")
             if student_name not in NAMES:
-                flash('Error! Invalid student name.')
+                flash('Error! Invalid student name.', 'alert-danger')
             con.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
 
         else:
@@ -151,9 +155,6 @@ def undo():
         
         con.commit()
     
-    prevs = ["",0]
-
-
     return redirect("/funds")
 
 

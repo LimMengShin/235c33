@@ -10,13 +10,21 @@ onload="getOption()"
 
 {% block body %}
 <div class="container">
-    {% for message in get_flashed_messages(e) %}
-    <div class="alert alert-danger">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="alert {{ category }}" style="vertical-align: middle;">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
-        {{ message }}
+        <p class="pull-left d-inline">{{ message }}</p>
+        {% if category=='alert-success' %}
+        <form action="/undo" method="post" class="d-inline pull-right">
+            <input type="submit" value="UNDO" name="undo" class="btn btn-xs btn-danger pull-right">
+        </form>
+        {% endif %}
     </div>
     {% endfor %} 
+    {% endwith %}
 </div>
+
 <div id="mytable">
     <table id="fixed_header" class="table-striped table table-bordered">
         <thead>
@@ -61,9 +69,6 @@ onload="getOption()"
         <div class="form-group">
             <input type="submit" value="Update Funds" class="btn btn-primary">
         </div>
-    </form>
-    <form method="post" action="/undo">
-        <input type="submit" value="UNDO" name="undo" class="btn btn-danger">
     </form>
 </div>
 
