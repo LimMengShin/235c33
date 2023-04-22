@@ -17,8 +17,8 @@ NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalyn
         'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden',\
         'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
 GROUPS = ['Class Add', 'Class Subtract', 'H2 Physics', 'H2 Mathematics', 'H2 Economics', 'H2 Computing', 'Individual Add', 'Individual Subtract']
-d = {
 
+d = {
     'H2 Physics': 'h2_physics',
     'H2 Mathematics': 'h2_math',
     'H2 Economics': 'h2_econs',
@@ -92,6 +92,7 @@ def funds():
 
                 elif group == "Individual Subtract":
                     student_name = request.form.get("indv")
+                    prevs[2] = student_name
                     if student_name not in NAMES:
                         valid = False
                         flash('Error! Invalid student name.', 'alert-danger')
@@ -130,6 +131,7 @@ def undo():
 
     group = prevs[0]
     amt = -prevs[1]
+    name = prevs[2]
 
     con = sqlite3.connect("class_funds.db")
     with con:
@@ -142,12 +144,10 @@ def undo():
             con.execute("UPDATE class_funds SET funds=funds-?", (int(amt),))
 
         elif group == "Individual Add":
-            student_name = request.form.get("indv")
-            con.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
+            con.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),name))
 
         elif group == "Individual Subtract":
-            student_name = request.form.get("indv")
-            con.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
+            con.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),name))
 
         else:
             subject = d[group]
