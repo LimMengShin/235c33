@@ -12,7 +12,7 @@ def amt_is_valid(amt):
 
 app = Flask(__name__)
 app.secret_key = "secret key"
-prevs = ["", 0, ""] # group, amt, name
+prevs = ["", 0, "", ""] # group, amt, name, date
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin',\
         'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden',\
         'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
@@ -72,7 +72,7 @@ def funds():
             
                 prevs[0] = group
                 prevs[1] = amt
-                
+                prevs[3] = date
                 if group == "Class Add":
                     cur.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
                     num_affected = len(NAMES)
@@ -132,9 +132,9 @@ def undo():
     group = prevs[0]
     amt = -prevs[1]
     name = prevs[2]
+    date = prevs[3]
 
-    con = sqlite3.connect("class_funds.db")
-    with con:
+    with sqlite3.connect("class_funds.db") as con:
         con.row_factory = sqlite3.Row
         cur = con.cursor()
         
@@ -155,6 +155,12 @@ def undo():
             con.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
         
         con.commit()
+    
+    with sqlite3.connect("logs.db") as con2:
+        con2.row_factory = sqlite3.Row
+        cur2 = con2.cursor()
+        cur2.execute("DELETE FROM logs WHERE date=?", (date,))
+        con2.commit()
     
     return redirect("/funds")
 
