@@ -12,7 +12,7 @@ def amt_is_valid(amt):
 
 app = Flask(__name__)
 app.secret_key = "secret key"
-prevs = ["",0]
+prevs = ["", 0, ""] # group, amt, name
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin',\
         'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden',\
         'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
@@ -24,7 +24,7 @@ d = {
     'H2 Economics': 'h2_econs',
     'H2 Computing': 'h2_comp',
 }
-  
+
 
 @app.route("/")
 def index():
@@ -66,6 +66,7 @@ def funds():
             elif not amt_is_valid(amt):
                 flash('Error! Invalid amount.', 'alert-danger')
             else:
+                valid = True
                 total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
                 amt = float(amt)*100
             
@@ -82,7 +83,9 @@ def funds():
 
                 elif group == "Individual Add":
                     student_name = request.form.get("indv")
+                    prevs[2] = student_name
                     if student_name not in NAMES:
+                        valid = False
                         flash('Error! Invalid student name.', 'alert-danger')
                     cur.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
                     num_affected = 1
@@ -90,6 +93,7 @@ def funds():
                 elif group == "Individual Subtract":
                     student_name = request.form.get("indv")
                     if student_name not in NAMES:
+                        valid = False
                         flash('Error! Invalid student name.', 'alert-danger')
                     cur.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
                     num_affected = 1
@@ -100,18 +104,19 @@ def funds():
                     cur.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
                     num_affected = len(students)
                 
-                total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
+                if valid:
+                    total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
 
-                con.commit()
+                    con.commit()
 
-                with sqlite3.connect("logs.db") as con2:
-                    con2.row_factory = sqlite3.Row
-                    cur2 = con2.cursor()
-                    cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date))
-                    con2.commit()
-                
-                redirect("/funds")
-                flash("Successfully updated values. Didn't mean to? Click here to undo: ", "alert-success")
+                    with sqlite3.connect("logs.db") as con2:
+                        con2.row_factory = sqlite3.Row
+                        cur2 = con2.cursor()
+                        cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date))
+                        con2.commit()
+                    
+                    redirect("/funds")
+                    flash("Successfully updated values. Didn't mean to? Click here to undo: ", "alert-success")
 
         funds = cur.execute("SELECT * FROM class_funds").fetchall()
 
@@ -138,14 +143,10 @@ def undo():
 
         elif group == "Individual Add":
             student_name = request.form.get("indv")
-            if student_name not in NAMES:
-                flash('Error! Invalid student name.', 'alert-danger')
             con.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
 
         elif group == "Individual Subtract":
             student_name = request.form.get("indv")
-            if student_name not in NAMES:
-                flash('Error! Invalid student name.', 'alert-danger')
             con.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
 
         else:
