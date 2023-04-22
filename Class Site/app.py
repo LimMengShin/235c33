@@ -117,7 +117,7 @@ def funds():
                         con2.commit()
                     
                     redirect("/funds")
-                    flash("Successfully updated values. Didn't mean to? Click here to undo: ", "alert-success")
+                    flash("Successfully updated values.", "alert-success")
 
         funds = cur.execute("SELECT * FROM class_funds").fetchall()
 
