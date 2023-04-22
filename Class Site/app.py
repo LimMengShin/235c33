@@ -58,8 +58,7 @@ def funds():
         if request.method == "POST":
             group = request.form.get("group")
             amt = request.form.get("amt")
-            date1 = datetime.now().strftime("%Y%m%d%H%M%S%f")
-            date2 = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             num_affected = 0
             if group not in GROUPS:
                 flash('Error! Invalid group.')
@@ -104,10 +103,7 @@ def funds():
                 with sqlite3.connect("logs.db") as con2:
                     con2.row_factory = sqlite3.Row
                     cur2 = con2.cursor()
-                    cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (group, amt, num_affected*amt, total_before, total_after, num_affected, date1, date2))
-                    # logs = cur2.execute("SELECT * from logs").fetchall()
-                    # for i in logs:
-                    #     print(i)
+                    cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date))
                     con2.commit()
 
         funds = cur.execute("SELECT * from class_funds").fetchall()
@@ -155,11 +151,13 @@ def undo():
 
     return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
 
+
 @app.route("/edit", methods=["GET", "POST"])
 def edit():
     if request.method == 'POST':
         return
     return render_template("edit.html")
+
 
 @app.route("/logs", methods=["GET", "POST"])
 def logs():
@@ -167,4 +165,5 @@ def logs():
         con2.row_factory = sqlite3.Row
         cur2 = con2.cursor()
         logs = cur2.execute("SELECT * from logs").fetchall()
+        logs.sort(key=lambda item: item["id"], reverse=True)
     return render_template("logs.html", logs=logs)

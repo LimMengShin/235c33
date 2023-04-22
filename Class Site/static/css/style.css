@@ -24,7 +24,7 @@ body {
     border-collapse: collapse;
     text-align: left;
 }
-  
+
 #mytable tbody {
     display: block;
     width: 100%;
@@ -37,7 +37,7 @@ body {
     display: grid;
     grid-template-columns: 0.5fr 2.5fr 1fr;
 }
-  
+
 #mytable thead th,
 #mytable tbody th,
 #mytable tbody td {
