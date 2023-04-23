@@ -155,10 +155,7 @@ def undo():
             con.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
         
         con.commit()
-    # add functionality to delete logs
-    # see indv logs
-    # note bought
-    # edit subject name list
+
     with sqlite3.connect("logs.db") as con2:
         con2.row_factory = sqlite3.Row
         cur2 = con2.cursor()
@@ -177,7 +174,6 @@ def edit():
         students_h2_math = [di["id"] for di in cur.execute("SELECT id from h2_math").fetchall()]
         students_h2_econs = [di["id"] for di in cur.execute("SELECT id from h2_econs").fetchall()]
         students_h2_comp = [di["id"] for di in cur.execute("SELECT id from h2_comp").fetchall()]
-        print(students_h2_econs)
 
         if request.method == "POST":
             students_h2_phy = request.form.getlist('h2_physics', type=int)
@@ -192,12 +188,10 @@ def edit():
             con.executemany("INSERT INTO h2_econs VALUES (?, ?)", ([id, NAMES[id-1]] for id in students_h2_econs))
             con.execute("DELETE FROM h2_comp")
             con.executemany("INSERT INTO h2_comp VALUES (?, ?)", ([id, NAMES[id-1]] for id in students_h2_comp))
+            
             con.commit()
 
-        funds = cur.execute("SELECT * FROM class_funds").fetchall()
-
     return render_template("edit.html", names=NAMES, students_h2_phy=students_h2_phy, students_h2_math=students_h2_math, students_h2_econs=students_h2_econs, students_h2_comp=students_h2_comp)
-    return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
 
 
 @app.route("/logs", methods=["GET", "POST"])
