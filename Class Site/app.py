@@ -155,7 +155,10 @@ def undo():
             con.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
         
         con.commit()
-    
+    # add functionality to delete logs
+    # see indv logs
+    # note bought
+    # edit subject name list
     with sqlite3.connect("logs.db") as con2:
         con2.row_factory = sqlite3.Row
         cur2 = con2.cursor()
@@ -167,9 +170,34 @@ def undo():
 
 @app.route("/edit", methods=["GET", "POST"])
 def edit():
-    if request.method == 'POST':
-        return
-    return render_template("edit.html")
+    with sqlite3.connect("class_funds.db") as con:
+        con.row_factory = sqlite3.Row
+        cur = con.cursor()
+        students_h2_phy = [di["id"] for di in cur.execute("SELECT id from h2_physics").fetchall()]
+        students_h2_math = [di["id"] for di in cur.execute("SELECT id from h2_math").fetchall()]
+        students_h2_econs = [di["id"] for di in cur.execute("SELECT id from h2_econs").fetchall()]
+        students_h2_comp = [di["id"] for di in cur.execute("SELECT id from h2_comp").fetchall()]
+        print(students_h2_econs)
+
+        if request.method == "POST":
+            students_h2_phy = request.form.getlist('h2_physics', type=int)
+            students_h2_math = request.form.getlist('h2_math', type=int)
+            students_h2_econs = request.form.getlist('h2_econs', type=int)
+            students_h2_comp = request.form.getlist('h2_comp', type=int)
+            con.execute("DELETE FROM h2_physics")
+            con.executemany("INSERT INTO h2_physics VALUES (?, ?)", ([id, NAMES[id-1]] for id in students_h2_phy))
+            con.execute("DELETE FROM h2_math")
+            con.executemany("INSERT INTO h2_math VALUES (?, ?)", ([id, NAMES[id-1]] for id in students_h2_math))
+            con.execute("DELETE FROM h2_econs")
+            con.executemany("INSERT INTO h2_econs VALUES (?, ?)", ([id, NAMES[id-1]] for id in students_h2_econs))
+            con.execute("DELETE FROM h2_comp")
+            con.executemany("INSERT INTO h2_comp VALUES (?, ?)", ([id, NAMES[id-1]] for id in students_h2_comp))
+            con.commit()
+
+        funds = cur.execute("SELECT * FROM class_funds").fetchall()
+
+    return render_template("edit.html", names=NAMES, students_h2_phy=students_h2_phy, students_h2_math=students_h2_math, students_h2_econs=students_h2_econs, students_h2_comp=students_h2_comp)
+    return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
 
 
 @app.route("/logs", methods=["GET", "POST"])

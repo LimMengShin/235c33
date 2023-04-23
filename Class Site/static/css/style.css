@@ -2,7 +2,7 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
-#mytable {
+#funds_table {
     float: left;
     width: 40vw;
     margin-left: 2vw;
@@ -19,28 +19,28 @@ body {
     clear: both;
 }
 
-#mytable {
+#funds_table {
     table-layout: auto;
     border-collapse: collapse;
     text-align: left;
 }
 
-#mytable tbody {
+#funds_table tbody {
     display: block;
     width: 100%;
     overflow: overlay;
     height: 72vh;
 }
 
-#mytable tbody tr,
-#mytable thead tr {
+#funds_table tbody tr,
+#funds_table thead tr {
     display: grid;
     grid-template-columns: 0.5fr 2.5fr 1fr;
 }
 
-#mytable thead th,
-#mytable tbody th,
-#mytable tbody td {
+#funds_table thead th,
+#funds_table tbody th,
+#funds_table tbody td {
     padding: 12px 15px 12px 10px;
 }
 

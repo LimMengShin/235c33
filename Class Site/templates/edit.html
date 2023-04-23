@@ -5,5 +5,35 @@ Edit
 {% endblock %}
 
 {% block body %}
-<h1>EDIT PAGES!!!!!!</h1>
+<form action="/edit" method="post" class="form">
+    <div id="edit_table">
+        <table id="fixed_header" class="table-striped table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>H2 Physics</th>
+                    <th>H2 Mathematics</th>
+                    <th>H2 Economics</th>
+                    <th>H2 Computing</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for name in names %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ name }}</td>
+                    <td><input type="checkbox" name="h2_physics" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_phy }}></td>
+                    <td><input type="checkbox" name="h2_math" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_math }}></td>
+                    <td><input type="checkbox" name="h2_econs" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_econs }}></td>
+                    <td><input type="checkbox" name="h2_comp" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_comp }}></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Edit" class="btn btn-primary">
+    </div>
+</form>
 {% endblock %}
