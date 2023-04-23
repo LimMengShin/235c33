@@ -17,6 +17,7 @@ Logs
             </h2>
             <div id="collapse{{ log["id"] }}" class="accordion-collapse collapse" aria-labelledby="heading{{ log["id"] }}">
                 <div class="accordion-body">
+                    <p>Remarks: {{ log["remarks"] }}</p>
                     <p>Total changed: {{ "${:.2f}".format(log["total_changed"]/100) }}</p>
                     <p>Total before: {{ "${:.2f}".format(log["total_before"]/100) }}</p>
                     <p>Total after: {{ "${:.2f}".format(log["total_after"]/100) }}</p>

@@ -58,6 +58,7 @@ def funds():
         if request.method == "POST":
             group = request.form.get("group")
             amt = request.form.get("amt")
+            remarks = request.form.get("remarks")
             date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             num_affected = 0
 
@@ -65,6 +66,8 @@ def funds():
                 flash('Error! Invalid group.', 'alert-danger')
             elif not amt_is_valid(amt):
                 flash('Error! Invalid amount.', 'alert-danger')
+            elif len(remarks) > 100:
+                flash('Error! Remarks should be limited to 100 characters.', 'alert-danger')
             else:
                 valid = True
                 total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
@@ -113,7 +116,8 @@ def funds():
                     with sqlite3.connect("logs.db") as con2:
                         con2.row_factory = sqlite3.Row
                         cur2 = con2.cursor()
-                        cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date))
+                        cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                     (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date, remarks))
                         con2.commit()
                     
                     redirect("/funds")
