@@ -1,39 +1,108 @@
 {% extends "layout.html" %}
 
+{% block onload %}
+onload="onLoadFunc()"
+{% endblock %}
+
 {% block title %}
 Edit
 {% endblock %}
 
 {% block body %}
 <form action="/edit" method="post" class="form">
-    <div id="edit_table">
+    <div id="funds_table">
         <table id="fixed_header" class="table-striped table table-bordered">
             <thead>
-                <tr>
+                <tr class="rm_lr">
                     <th>#</th>
                     <th>Name</th>
-                    <th>H2 Physics</th>
-                    <th>H2 Mathematics</th>
-                    <th>H2 Economics</th>
-                    <th>H2 Computing</th>
+                    <th class="h2_physics">H2 Physics</th>
+                    <th class="h2_math">H2 Mathematics</th>
+                    <th class="h2_econs">H2 Economics</th>
+                    <th class="h2_comp">H2 Computing</th>
                 </tr>
             </thead>
             <tbody>
                 {% for name in names %}
-                <tr>
+                <tr class="rm_lr">
                     <td>{{ loop.index }}</td>
                     <td>{{ name }}</td>
-                    <td><input type="checkbox" name="h2_physics" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_phy }}></td>
-                    <td><input type="checkbox" name="h2_math" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_math }}></td>
-                    <td><input type="checkbox" name="h2_econs" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_econs }}></td>
-                    <td><input type="checkbox" name="h2_comp" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_comp }}></td>
+                    <td class="h2_physics"><input type="checkbox" name="h2_physics" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_phy }}></td>
+                    <td class="h2_math"><input type="checkbox" name="h2_math" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_math }}></td>
+                    <td class="h2_econs"><input type="checkbox" name="h2_econs" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_econs }}></td>
+                    <td class="h2_comp"><input type="checkbox" name="h2_comp" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_comp }}></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    <div class="form-group">
-        <input type="submit" value="Edit" class="btn btn-primary">
+    <div class="form-group d-sm-flex submission">
+        <select class="custom-select mr-3" name="select_group" id="select_group" onchange="getGroupOption()">
+            <option selected value="" disabled >Select a group</option>
+            <option value="h2_physics">H2 Physics</option>
+            <option value="h2_math">H2 Math</option>
+            <option value="h2_econs">H2 Econs</option>
+            <option value="h2_comp">H2 Comp</option>
+        </select>
+        <div class="form-group">
+            <input type="submit" value="Edit Group(s)" class="btn btn-primary">
+        </div>
     </div>
+
 </form>
+
+<script type="text/javascript">
+    function onLoadFunc() {
+        var hide_col_a = document.querySelectorAll("#funds_table tbody tr");
+        var hide_col_b = document.querySelectorAll("#funds_table thead tr");
+
+        hide_col_a.forEach(elem => {
+            elem.style.gridTemplateColumns = "0.5fr 2.5fr"
+        });
+
+        hide_col_b.forEach(elem => {
+            elem.style.gridTemplateColumns = "0.5fr 2.5fr"
+        });
+
+        const sbj_list = ["h2_physics", "h2_econs", "h2_math", "h2_comp"];
+        var cols=document.getElementById("select_group").value;
+        
+        
+        for (var i=0; i<sbj_list.length; i++) {
+            var this_col = document.getElementsByClassName(sbj_list[i]);
+            for(var j=0;j<this_col.length; j++) {
+                this_col[j].style.display="none";
+            }
+        }
+    }
+
+    function getGroupOption() {
+        const sbj_list = ["h2_physics", "h2_econs", "h2_math", "h2_comp"];
+        var cols=document.getElementById("select_group").value;
+        
+        var hide_col_a = document.querySelectorAll("#funds_table tbody tr");
+        var hide_col_b = document.querySelectorAll("#funds_table thead tr");
+
+        hide_col_a.forEach(elem => {
+            elem.style.gridTemplateColumns = "0.5fr 2.5fr 1fr"
+        });
+
+        hide_col_b.forEach(elem => {
+            elem.style.gridTemplateColumns = "0.5fr 2.5fr 1fr"
+        });
+
+        for (var i=0; i<sbj_list.length; i++) {
+            var this_col = document.getElementsByClassName(sbj_list[i]);
+            if (sbj_list[i] != cols) {
+                for(var j=0;j<this_col.length; j++) {
+                    this_col[j].style.display="none";
+                }
+            } else {
+                for(var j=0;j<this_col.length; j++) {
+                    this_col[j].style.display="table-cell";
+                }
+            }
+        }
+    }
+    </script>
 {% endblock %}

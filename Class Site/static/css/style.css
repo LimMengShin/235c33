@@ -2,13 +2,6 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
-#funds_table {
-    float: left;
-    width: 40vw;
-    margin-left: 2vw;
-    padding-top: 2vh;
-}
-
 .submission {
     float: left;
     padding-top: 10vh;
@@ -20,6 +13,10 @@ body {
 }
 
 #funds_table {
+    float: left;
+    width: 43vw;
+    margin-left: 2vw;
+    padding-top: 2vh;
     table-layout: auto;
     border-collapse: collapse;
     text-align: left;
