@@ -12,7 +12,7 @@ def amt_is_valid(amt):
 
 app = Flask(__name__)
 app.secret_key = "secret key"
-prevs = ["", 0, "", ""] # group, amt, name, date
+prevs = ["", 0, "", "", []] # group, amt, name, date, student_names
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin',\
         'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden',\
         'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
@@ -45,6 +45,11 @@ def clear():
     with sqlite3.connect("logs.db") as con2:
         cur2 = con2.cursor()
         cur2.execute("DELETE FROM logs")
+        con2.commit()
+    with sqlite3.connect("indv_logs.db") as con2:
+        cur2 = con2.cursor()
+        for name in NAMES:
+            cur2.execute(f"DELETE FROM `{name}`")
         con2.commit()
     return redirect("/logs")
 
@@ -113,6 +118,8 @@ def funds():
                     num_affected = len(students)
                     student_names = [di["name"] for di in cur.execute(f"SELECT name FROM {grp}").fetchall()]
                 
+                prevs[4] = student_names
+
                 if valid:
                     total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
 
@@ -150,6 +157,7 @@ def undo():
     amt = -prevs[1]
     name = prevs[2]
     date = prevs[3]
+    student_names = prevs[4]
 
     with sqlite3.connect("class_funds.db") as con:
         con.row_factory = sqlite3.Row
@@ -176,8 +184,16 @@ def undo():
     with sqlite3.connect("logs.db") as con2:
         con2.row_factory = sqlite3.Row
         cur2 = con2.cursor()
+        log_id = cur2.execute(f"SELECT id FROM logs WHERE date=?", (date,)).fetchone()["id"]
         cur2.execute("DELETE FROM logs WHERE date=?", (date,))
         con2.commit()
+    
+    with sqlite3.connect("indv_logs.db") as con3:
+        con3.row_factory = sqlite3.Row
+        cur3 = con3.cursor()
+        for name in student_names:
+            cur3.execute(f"DELETE FROM `{name}` WHERE logs_id=?", (log_id,))
+        con3.commit()
     
     return redirect("/funds")
 
@@ -243,17 +259,3 @@ def indv_logs():
                         log = cur2.execute(f"SELECT grp, amt, date, remarks from logs WHERE id=?", (indv_log,)).fetchone()
                         indv_logs_list.append(log)
     return render_template("indv_logs.html", names=NAMES, indv_logs_list=indv_logs_list)
-
-
-# @app.route("/test", methods=["GET", "POST"])
-# def test():
-#     with sqlite3.connect("indv_logs.db") as con3:
-#         con3.row_factory = sqlite3.Row
-#         cur3 = con3.cursor()
-#         for name in NAMES:
-#             cur3.execute(f"CREATE TABLE `{name}` (logs_id INT)")
-#         con3.commit()
-#     return "test"
-
-# TODO: make undo work with indv logs
-# TODO: delete all indv logs
