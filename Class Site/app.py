@@ -79,10 +79,12 @@ def funds():
                 if group == "Class Add":
                     cur.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
                     num_affected = len(NAMES)
+                    student_names = NAMES
 
                 elif group == "Class Subtract":
                     cur.execute("UPDATE class_funds SET funds=funds-?", (int(amt),))
                     num_affected = len(NAMES)
+                    student_names = NAMES
 
                 elif group == "Individual Add":
                     student_name = request.form.get("indv")
@@ -92,6 +94,7 @@ def funds():
                         flash('Error! Invalid student name.', 'alert-danger')
                     cur.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
                     num_affected = 1
+                    student_names = [student_name]
 
                 elif group == "Individual Subtract":
                     student_name = request.form.get("indv")
@@ -101,12 +104,14 @@ def funds():
                         flash('Error! Invalid student name.', 'alert-danger')
                     cur.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
                     num_affected = 1
+                    student_names = [student_name]
 
                 else:
                     grp = d[group]
                     students = [di["id"] for di in cur.execute(f"SELECT id FROM {grp}").fetchall()]
                     cur.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
                     num_affected = len(students)
+                    student_names = [di["name"] for di in cur.execute(f"SELECT name FROM {grp}").fetchall()]
                 
                 if valid:
                     total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
@@ -118,7 +123,15 @@ def funds():
                         cur2 = con2.cursor()
                         cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                                      (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date, remarks))
+                        log_id = cur2.execute(f"SELECT id FROM logs WHERE date=?", (date,)).fetchone()["id"]
                         con2.commit()
+                    
+                    with sqlite3.connect("indv_logs.db") as con3:
+                        con3.row_factory = sqlite3.Row
+                        cur3 = con3.cursor()
+                        for name in student_names:
+                            cur3.execute(f"INSERT INTO `{name}` VALUES (?)", (log_id,))
+                        con3.commit()
                     
                     redirect("/funds")
                     flash("Successfully updated values.", "alert-success")
@@ -206,3 +219,41 @@ def logs():
         logs = cur2.execute("SELECT * from logs").fetchall()
         logs.sort(key=lambda item: item["id"], reverse=True)
     return render_template("logs.html", logs=logs)
+
+
+@app.route("/indv-logs", methods=["GET", "POST"])
+def indv_logs():
+    indv_logs_list = []
+    if request.method == "POST":
+        name = request.form.get("indv")
+        if name not in NAMES:
+            flash('Error! Invalid student name.', 'alert-danger')
+        else:
+            with sqlite3.connect("indv_logs.db") as con3:
+                con3.row_factory = sqlite3.Row
+                cur3 = con3.cursor()
+                indv_logs = [log_id["logs_id"] for log_id in cur3.execute(f"SELECT logs_id from `{name}`").fetchall()]
+                print(indv_logs)
+                indv_logs.sort(reverse=True)
+                
+                with sqlite3.connect("logs.db") as con2:
+                    con2.row_factory = sqlite3.Row
+                    cur2 = con2.cursor()
+                    for indv_log in indv_logs:
+                        log = cur2.execute(f"SELECT grp, amt, date, remarks from logs WHERE id=?", (indv_log,)).fetchone()
+                        indv_logs_list.append(log)
+    return render_template("indv_logs.html", names=NAMES, indv_logs_list=indv_logs_list)
+
+
+# @app.route("/test", methods=["GET", "POST"])
+# def test():
+#     with sqlite3.connect("indv_logs.db") as con3:
+#         con3.row_factory = sqlite3.Row
+#         cur3 = con3.cursor()
+#         for name in NAMES:
+#             cur3.execute(f"CREATE TABLE `{name}` (logs_id INT)")
+#         con3.commit()
+#     return "test"
+
+# TODO: make undo work with indv logs
+# TODO: delete all indv logs
