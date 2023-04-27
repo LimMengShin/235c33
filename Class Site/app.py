@@ -56,6 +56,8 @@ def clear():
 
 @app.route("/funds", methods=["GET", "POST"])
 def funds():
+    selected_def = ''
+    stud_def=''
     with sqlite3.connect("class_funds.db") as con:
         con.row_factory = sqlite3.Row
         cur = con.cursor()
@@ -65,16 +67,19 @@ def funds():
             amt = request.form.get("amt")
             remarks = request.form.get("remarks")
             date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            selected_def = group
             num_affected = 0
 
             if group not in GROUPS:
                 flash('Error! Invalid group.', 'alert-danger')
+                selected_def=''
+            elif group.split()[0] == "Individual" and request.form.get("indv") not in NAMES:
+                flash("Error! Invalid student name.", 'alert-danger')
             elif not amt_is_valid(amt):
                 flash('Error! Invalid amount.', 'alert-danger')
             elif len(remarks) > 100:
                 flash('Error! Remarks should be limited to 100 characters.', 'alert-danger')
             else:
-                valid = True
                 total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
                 amt = float(amt)*100
             
@@ -84,68 +89,62 @@ def funds():
                 if group == "Class Add":
                     cur.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
                     num_affected = len(NAMES)
-                    student_names = NAMES
+                    prevs[4] = NAMES
 
                 elif group == "Class Subtract":
                     cur.execute("UPDATE class_funds SET funds=funds-?", (int(amt),))
                     num_affected = len(NAMES)
-                    student_names = NAMES
+                    prevs[4] = NAMES
 
                 elif group == "Individual Add":
                     student_name = request.form.get("indv")
                     prevs[2] = student_name
-                    if student_name not in NAMES:
-                        valid = False
-                        flash('Error! Invalid student name.', 'alert-danger')
+                    stud_def = student_name
                     cur.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
                     num_affected = 1
-                    student_names = [student_name]
+                    prevs[4] = [student_name]
 
                 elif group == "Individual Subtract":
                     student_name = request.form.get("indv")
                     prevs[2] = student_name
-                    if student_name not in NAMES:
-                        valid = False
-                        flash('Error! Invalid student name.', 'alert-danger')
+                    stud_def = student_name
                     cur.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
                     num_affected = 1
-                    student_names = [student_name]
+                    prevs[4] = [student_name]
 
                 else:
                     grp = d[group]
                     students = [di["id"] for di in cur.execute(f"SELECT id FROM {grp}").fetchall()]
                     cur.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
                     num_affected = len(students)
-                    student_names = [di["name"] for di in cur.execute(f"SELECT name FROM {grp}").fetchall()]
+                    prevs[4] = [di["name"] for di in cur.execute(f"SELECT name FROM {grp}").fetchall()]
                 
-                prevs[4] = student_names
 
-                if valid:
-                    total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
+                total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
 
-                    con.commit()
+                con.commit()
 
-                    with sqlite3.connect("logs.db") as con2:
-                        con2.row_factory = sqlite3.Row
-                        cur2 = con2.cursor()
-                        cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                                     (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date, remarks))
-                        log_id = cur2.execute(f"SELECT id FROM logs WHERE date=?", (date,)).fetchone()["id"]
-                        con2.commit()
-                    
-                    with sqlite3.connect("indv_logs.db") as con3:
-                        con3.row_factory = sqlite3.Row
-                        cur3 = con3.cursor()
-                        for name in student_names:
-                            cur3.execute(f"INSERT INTO `{name}` VALUES (?)", (log_id,))
-                        con3.commit()
-                    
-                    redirect("/funds")
-                    flash("Successfully updated values.", "alert-success")
+                with sqlite3.connect("logs.db") as con2:
+                    con2.row_factory = sqlite3.Row
+                    cur2 = con2.cursor()
+                    cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                    (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date, remarks))
+                    log_id = cur2.execute(f"SELECT id FROM logs WHERE date=?", (date,)).fetchone()["id"]
+                    con2.commit()
+                
+                with sqlite3.connect("indv_logs.db") as con3:
+                    con3.row_factory = sqlite3.Row
+                    cur3 = con3.cursor()
+                    for name in prevs[4]:
+                        cur3.execute(f"INSERT INTO `{name}` VALUES (?)", (log_id,))
+                    con3.commit()
+                
+                redirect("/funds")
+                flash("Successfully updated values.", "alert-success")
 
         funds = cur.execute("SELECT * FROM class_funds").fetchall()
 
-    return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES)
+    return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES, sel_def=selected_def, stud_def=stud_def)
 
 
 @app.route("/undo", methods=["POST", "GET"])
