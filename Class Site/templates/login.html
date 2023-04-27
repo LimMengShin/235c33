@@ -5,5 +5,13 @@ Login
 {% endblock %}
 
 {% block body %}
-
+{% if session["name"] %}
+<h1>Logged in as {{ session["name"] }}. </h1>
+{% else %}
+<form action="/login" method="post">
+    <input type="text" name="username">
+    <input type="password" name="pw">
+    <input type="submit" value="Login">
+</form>
+{% endif %}
 {% endblock %}
