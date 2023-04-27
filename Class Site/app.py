@@ -262,4 +262,9 @@ def indv_logs():
 
 @app.errorhandler(404)
 def not_found(error):
+    return redirect("/404")
+
+
+@app.route("/404")
+def fof():
     return render_template("404.html")
