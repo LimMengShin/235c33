@@ -258,3 +258,8 @@ def indv_logs():
                         log = cur2.execute(f"SELECT grp, amt, date, remarks from logs WHERE id=?", (indv_log,)).fetchone()
                         indv_logs_list.append(log)
     return render_template("indv_logs.html", names=NAMES, indv_logs_list=indv_logs_list)
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return render_template("404.html")
