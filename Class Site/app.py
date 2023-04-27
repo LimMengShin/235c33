@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, flash, abort
 import sqlite3
 from datetime import datetime
+from flask_session import Session
 
 def amt_is_valid(amt):
     try:
@@ -11,6 +12,7 @@ def amt_is_valid(amt):
         return True
 
 app = Flask(__name__)
+Session(app)
 app.secret_key = "secret key"
 prevs = ["", 0, "", "", []] # group, amt, name, date, student_names
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin',\
@@ -30,6 +32,9 @@ d = {
 def index():
     return render_template("index.html")
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    return render_template("login.html", session=Session)
 
 @app.route("/reset")
 def reset():
