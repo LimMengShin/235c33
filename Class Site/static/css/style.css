@@ -49,3 +49,13 @@ h1 {
     padding-left: 2vw;
     padding-top: 2vw;
 }
+
+#indv_logs_table {
+    margin: 0 auto;
+    width: 80vw;
+}
+
+.indv_submission {
+    float: left;
+    padding-top: 3vh;
+}
