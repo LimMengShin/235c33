@@ -2,6 +2,13 @@ from flask import Flask, render_template, request, redirect, flash, abort
 import sqlite3
 from datetime import datetime
 from flask_session import Session
+import os
+from dotenv import load_dotenv
+
+Session["User"]=''
+Session["Auth"]=''
+
+load_dotenv()
 
 def amt_is_valid(amt):
     try:
@@ -34,6 +41,15 @@ def index():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == 'POST':
+        username = request.form.get("usrnm")
+        password = request.form.get("pwd")
+
+        if username == os.getenv("USERNAME") and password == os.getenv("PASSWORD"):
+            Session["User"] = username
+            Session["Auth"] = "admin"
+        
+
     return render_template("login.html", session=Session)
 
 @app.route("/reset")
