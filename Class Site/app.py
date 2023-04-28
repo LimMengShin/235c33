@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, flash, abort
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, PasswordField, TextAreaField, SelectField, DecimalField, SubmitField
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
+from wtforms import SubmitField, PasswordField, StringField, TextAreaField, SelectField, DecimalField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, ValidationError
 import sqlite3
 from datetime import datetime
@@ -21,6 +22,12 @@ d = {
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "supersecretkeyjajaja"
 
+class LoginForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()], render_kw={'placeholder': 'Enter username'})
+    password = PasswordField("Password", validators=[DataRequired()], render_kw={'placeholder': 'Enter Password'})
+    remember_me = BooleanField("Remember me")
+    submit = SubmitField("Login")
+
 
 class UpdateFundForm(FlaskForm):
     group = SelectField("Select a group", choices=[(sbj, sbj) for sbj in GROUPS], validators=[DataRequired()], render_kw={'onchange': 'getOption()'})
@@ -34,6 +41,13 @@ class UpdateFundForm(FlaskForm):
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    form = LoginForm()
+    return render_template("login.html", form=form)
+
 
 @app.route("/reset")
 def reset():

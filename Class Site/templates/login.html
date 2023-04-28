@@ -9,20 +9,21 @@ Login
 <h1>Logged in as {{ session["name"] }}. </h1>
 {% else %}
 <div style="width: 50vw; margin: 20vh 23vw;" >
-    <form action="/login" method="post">
+    <form action="/login" method="POST">
+        {{ form.hidden_tag() }}
         <div class="form-group">
-        <label for="usrnm">Username</label>
-            <input name="usrnm" type="text" class="form-control" id="usrnm" aria-describedby="Username" placeholder="Enter username">
+            {{ form.username.label }}
+            {{ form.username(class_="form-control") }}
         </div>
         <div class="form-group">
-            <label for="pwd">Password</label>
-            <input name="pwd" type="password" class="form-control" id="pwd" placeholder="Password">
+            {{ form.password.label }}
+            {{ form.password(class_="form-control") }}
         </div>
         <div class="form-check">
-            <input type="checkbox" class="form-check-input" id="rmbme">
-            <label class="form-check-label mb-4" for="rmbme">Remember me</label>
+            {{ form.remember_me(class_="form-check-input")}}
+            {{ form.remember_me.label }}
         </div>
-        <button type="submit" class="btn btn-primary">Login</button>
+        {{ form.submit(class_="btn btn-primary") }}
     </form>
 </div>
 {% endif %}
