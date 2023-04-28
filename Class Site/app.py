@@ -1,26 +1,10 @@
 from flask import Flask, render_template, request, redirect, flash, abort
+from flask_wtf import FlaskForm
+from wtforms import SubmitField, PasswordField, TextAreaField, SelectField, DecimalField, SubmitField
+from wtforms.validators import DataRequired, Length, ValidationError
 import sqlite3
 from datetime import datetime
-from flask_session import Session
-import os
-from dotenv import load_dotenv
 
-Session["User"]=''
-Session["Auth"]=''
-
-load_dotenv()
-
-def amt_is_valid(amt):
-    try:
-        amt = float(amt)
-    except ValueError:
-        return False
-    else:
-        return True
-
-app = Flask(__name__)
-Session(app)
-app.secret_key = "secret key"
 prevs = ["", 0, "", "", []] # group, amt, name, date, student_names
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin',\
         'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden',\
@@ -34,23 +18,22 @@ d = {
     'H2 Computing': 'h2_comp',
 }
 
+app = Flask(__name__)
+app.config["SECRET_KEY"] = "supersecretkeyjajaja"
+
+
+class UpdateFundForm(FlaskForm):
+    group = SelectField("Select a group", choices=[(sbj, sbj) for sbj in GROUPS], validators=[DataRequired()], render_kw={'onchange': 'getOption()'})
+    indiv = SelectField("Select a student", choices=[(name, name) for name in NAMES])
+    amt = DecimalField("Amount", validators=[DataRequired()], render_kw={'placeholder': 'Amount'})
+    rmks = TextAreaField("Remarks", validators=[Length(min=0, max=100)], render_kw={'placeholder': 'Remarks'})
+    submit = SubmitField("Update")
+
+    
 
 @app.route("/")
 def index():
     return render_template("index.html")
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == 'POST':
-        username = request.form.get("usrnm")
-        password = request.form.get("pwd")
-
-        if username == os.getenv("USERNAME") and password == os.getenv("PASSWORD"):
-            Session["User"] = username
-            Session["Auth"] = "admin"
-        
-
-    return render_template("login.html", session=Session)
 
 @app.route("/reset")
 def reset():
@@ -77,95 +60,82 @@ def clear():
 
 @app.route("/funds", methods=["GET", "POST"])
 def funds():
-    selected_def = ''
-    stud_def=''
+    form = UpdateFundForm()
+
     with sqlite3.connect("class_funds.db") as con:
         con.row_factory = sqlite3.Row
         cur = con.cursor()
 
-        if request.method == "POST":
-            group = request.form.get("group")
-            amt = request.form.get("amt")
-            remarks = request.form.get("remarks")
+        if form.validate_on_submit():
+            group = form.group.data
+            student_name = form.indiv.data
+            amt = form.amt.data
+            rmks = form.rmks.data
             date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            selected_def = group
-            num_affected = 0
 
-            if group not in GROUPS:
-                flash('Error! Invalid group.', 'alert-danger')
-                selected_def=''
-            elif group.split()[0] == "Individual" and request.form.get("indv") not in NAMES:
-                flash("Error! Invalid student name.", 'alert-danger')
-            elif not amt_is_valid(amt):
-                flash('Error! Invalid amount.', 'alert-danger')
-            elif len(remarks) > 100:
-                flash('Error! Remarks should be limited to 100 characters.', 'alert-danger')
-            else:
-                total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
-                amt = float(amt)*100
+            total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
+            amt = float(amt)*100
             
-                prevs[0] = group
-                prevs[1] = amt
-                prevs[3] = date
-                if group == "Class Add":
-                    cur.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
-                    num_affected = len(NAMES)
-                    prevs[4] = NAMES
+            prevs[0] = group
+            prevs[1] = amt
+            prevs[3] = date
 
-                elif group == "Class Subtract":
-                    cur.execute("UPDATE class_funds SET funds=funds-?", (int(amt),))
-                    num_affected = len(NAMES)
-                    prevs[4] = NAMES
+            if group == "Class Add":
+                cur.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
+                num_affected = len(NAMES)
+                prevs[4] = NAMES
 
-                elif group == "Individual Add":
-                    student_name = request.form.get("indv")
-                    prevs[2] = student_name
-                    stud_def = student_name
-                    cur.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
-                    num_affected = 1
-                    prevs[4] = [student_name]
+            elif group == "Class Subtract":
+                cur.execute("UPDATE class_funds SET funds=funds-?", (int(amt),))
+                num_affected = len(NAMES)
+                prevs[4] = NAMES
 
-                elif group == "Individual Subtract":
-                    student_name = request.form.get("indv")
-                    prevs[2] = student_name
-                    stud_def = student_name
-                    cur.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
-                    num_affected = 1
-                    prevs[4] = [student_name]
+            elif group == "Individual Add":
+                prevs[2] = student_name
+                cur.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
+                num_affected = 1
+                prevs[4] = [student_name]
 
-                else:
-                    grp = d[group]
-                    students = [di["id"] for di in cur.execute(f"SELECT id FROM {grp}").fetchall()]
-                    cur.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
-                    num_affected = len(students)
-                    prevs[4] = [di["name"] for di in cur.execute(f"SELECT name FROM {grp}").fetchall()]
-                
+            elif group == "Individual Subtract":
+                prevs[2] = student_name
+                cur.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
+                num_affected = 1
+                prevs[4] = [student_name]
 
-                total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
+            else:
+                grp = d[group]
+                students = [di["id"] for di in cur.execute(f"SELECT id FROM {grp}").fetchall()]
+                cur.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
+                num_affected = len(students)
+                prevs[4] = [di["name"] for di in cur.execute(f"SELECT name FROM {grp}").fetchall()]
+            
 
-                con.commit()
+            total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
 
-                with sqlite3.connect("logs.db") as con2:
-                    con2.row_factory = sqlite3.Row
-                    cur2 = con2.cursor()
-                    cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                                    (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date, remarks))
-                    log_id = cur2.execute(f"SELECT id FROM logs WHERE date=?", (date,)).fetchone()["id"]
-                    con2.commit()
-                
-                with sqlite3.connect("indv_logs.db") as con3:
-                    con3.row_factory = sqlite3.Row
-                    cur3 = con3.cursor()
-                    for name in prevs[4]:
-                        cur3.execute(f"INSERT INTO `{name}` VALUES (?)", (log_id,))
-                    con3.commit()
-                
-                redirect("/funds")
-                flash("Successfully updated values.", "alert-success")
+            con.commit()
 
-        funds = cur.execute("SELECT * FROM class_funds").fetchall()
+            with sqlite3.connect("logs.db") as con2:
+                con2.row_factory = sqlite3.Row
+                cur2 = con2.cursor()
+                cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date, rmks))
+                log_id = cur2.execute(f"SELECT id FROM logs WHERE date=?", (date,)).fetchone()["id"]
+                con2.commit()
+            
+            with sqlite3.connect("indv_logs.db") as con3:
+                con3.row_factory = sqlite3.Row
+                cur3 = con3.cursor()
+                for name in prevs[4]:
+                    cur3.execute(f"INSERT INTO `{name}` VALUES (?)", (log_id,))
+                con3.commit()
 
-    return render_template("class_funds.html", funds=funds, groups=GROUPS, names=NAMES, sel_def=selected_def, stud_def=stud_def)
+            redirect("/funds")
+            flash("Successfully updated values.", "alert-success")
+
+
+    funds = cur.execute("SELECT * FROM class_funds").fetchall()
+
+    return render_template("class_funds.html", form=form, funds=funds, groups=GROUPS, names=NAMES)
 
 
 @app.route("/undo", methods=["POST", "GET"])
