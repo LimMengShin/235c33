@@ -16,21 +16,20 @@ Edit
                 <tr class="rm_lr">
                     <th>#</th>
                     <th>Name</th>
-                    <th class="h2_physics">H2 Physics</th>
-                    <th class="h2_math">H2 Mathematics</th>
-                    <th class="h2_econs">H2 Economics</th>
-                    <th class="h2_comp">H2 Computing</th>
+                    <th class="H2_Physics">H2 Physics</th>
+                    <th class="H2_Math">H2 Mathematics</th>
+                    <th class="H2_Economics">H2 Economics</th>
+                    <th class="H2_Computing">H2 Computing</th>
                 </tr>
             </thead>
             <tbody>
-                {% for name in names %}
+                {% for student in funds %}
                 <tr class="rm_lr">
-                    <td>{{ loop.index }}</td>
-                    <td>{{ name }}</td>
-                    <td class="h2_physics"><input type="checkbox" name="h2_physics" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_phy }}></td>
-                    <td class="h2_math"><input type="checkbox" name="h2_math" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_math }}></td>
-                    <td class="h2_econs"><input type="checkbox" name="h2_econs" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_econs }}></td>
-                    <td class="h2_comp"><input type="checkbox" name="h2_comp" value="{{ loop.index }}" {{ "checked" if loop.index in students_h2_comp }}></td>
+                    <td>{{ student.id }}</td>
+                    <td>{{ student.name }}</td>
+                    {% for subject in subjects %}
+                        <td class="{{ '_'.join(subject.subject_name.split()) }}"><input type="checkbox" name="{{ '_'.join(subject.subject_name.split()) }}" value="{{ student.id }}" {{ "checked" if subject in student.groups }}></td>
+                    {% endfor %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -39,10 +38,10 @@ Edit
     <div class="form-group d-sm-flex submission">
         <select class="custom-select mr-3" name="select_group" id="select_group" onchange="getGroupOption()">
             <option selected value="" disabled >Select a group</option>
-            <option value="h2_physics">H2 Physics</option>
-            <option value="h2_math">H2 Math</option>
-            <option value="h2_econs">H2 Econs</option>
-            <option value="h2_comp">H2 Comp</option>
+            <option value="H2_Physics">H2 Physics</option>
+            <option value="H2_Math">H2 Math</option>
+            <option value="H2_Economics">H2 Econs</option>
+            <option value="H2_Computing">H2 Comp</option>
         </select>
         <div class="form-group">
             <input type="submit" value="Edit Group(s)" class="btn btn-primary">
@@ -64,7 +63,7 @@ Edit
             elem.style.gridTemplateColumns = "0.5fr 2.5fr"
         });
 
-        const sbj_list = ["h2_physics", "h2_econs", "h2_math", "h2_comp"];
+        const sbj_list = ["H2_Physics", "H2_Economics", "H2_Math", "H2_Computing"];
         var cols=document.getElementById("select_group").value;
         
         
@@ -77,7 +76,7 @@ Edit
     }
 
     function getGroupOption() {
-        const sbj_list = ["h2_physics", "h2_econs", "h2_math", "h2_comp"];
+        const sbj_list = ["H2_Physics", "H2_Economics", "H2_Math", "H2_Computing"];
         var cols=document.getElementById("select_group").value;
         
         var hide_col_a = document.querySelectorAll("#funds_table tbody tr");

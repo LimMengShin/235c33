@@ -9,20 +9,20 @@ Logs
 <div class="accordion">
     {% for log in logs %}
         <div class="accordion-item">
-            <h2 class="accordion-header" id="heading{{ log["id"] }}">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ log["id"] }}"
-                    aria-expanded="true" aria-controls="collapse{{ log["id"] }}">
-                    {{ log["grp"] }} - {{ "${:.2f}".format(log["amt"]/100) }}
+            <h2 class="accordion-header" id="heading {{ log.id }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ log.id }}"
+                    aria-expanded="true" aria-controls="collapse{{ log.id }}">
+                    {{ log.grp }} - {{ "${:.2f}".format(log.amt/100) }}
                 </button>
             </h2>
             <div id="collapse{{ log["id"] }}" class="accordion-collapse collapse" aria-labelledby="heading{{ log["id"] }}">
                 <div class="accordion-body">
-                    <p>Remarks: {{ log["remarks"] }}</p>
-                    <p>Total changed: {{ "${:.2f}".format(log["total_changed"]/100) }}</p>
-                    <p>Total before: {{ "${:.2f}".format(log["total_before"]/100) }}</p>
-                    <p>Total after: {{ "${:.2f}".format(log["total_after"]/100) }}</p>
-                    <p>Date: {{ log["date"] }}</p>
-                    <p>Number of people affected: {{ log["num_affected"] }}</p>
+                    <p>Remarks: {{ log.remarks }}</p>
+                    <p>Total changed: {{ "${:.2f}".format(log.total_changed/100) }}</p>
+                    <p>Total before: {{ "${:.2f}".format(log.total_before/100) }}</p>
+                    <p>Total after: {{ "${:.2f}".format(log.total_after/100) }}</p>
+                    <p>Date: {{ log.date }}</p>
+                    <p>Number of people affected: {{ log.num_affected }}</p>
                 </div>
             </div>
         </div>

@@ -11,12 +11,7 @@ Individual Logs
     {% for category, message in messages %}
     <div class="alert {{ category }} d-flex align-items-center">
         <p class="mb-0"><strong>{{ message }}</strong></p>
-        {% if category=='alert-success' %}
-        <p class="mb-0 ml-auto"><em>Didn't mean to? Click here to undo:</em></p>
-        <form action="/undo" method="post" class="ml-2 mr-3" >
-            <input type="submit" value="UNDO" name="undo" class="btn btn-xs btn-danger">
-        </form>
-        {% endif %}
+        
         <button type="button" class="close {% if category!='alert-success' %}ml-auto{% endif %}" data-dismiss="alert">
             <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 96 960 960" width="24"><path d="m249 849-42-42 231-231-231-231 42-42 231 231 231-231 42 42-231 231 231 231-42 42-231-231-231 231Z"/></svg>
         </button>
@@ -38,10 +33,10 @@ Individual Logs
         <tbody>
             {% for indv_log in indv_logs_list %}
             <tr>
-                <td>{{ indv_log["date"] }}</td>
-                <td>{{ indv_log["grp"] }}</td>
-                <td>{{ "${:.2f}".format(indv_log["amt"]/100) }}</td>
-                <td>{{ indv_log["remarks"] }}</td>
+                <td>{{ indv_log.date }}</td>
+                <td>{{ indv_log.grp }}</td>
+                <td>{{ "${:.2f}".format(indv_log.amt/100) }}</td>
+                <td>{{ indv_log.remarks }}</td>
             </tr>
             {% endfor %}
         </tbody>

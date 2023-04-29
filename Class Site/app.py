@@ -1,26 +1,70 @@
 from flask import Flask, render_template, request, redirect, flash, abort
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import func
 from flask_wtf import FlaskForm
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from wtforms import SubmitField, PasswordField, StringField, TextAreaField, SelectField, DecimalField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Length, ValidationError
-import sqlite3
+from wtforms.validators import DataRequired, Length
 from datetime import datetime
 
-prevs = ["", 0, "", "", []] # group, amt, name, date, student_names
+
+prevs = ["", 0, "", ""] # group, amt, name, date
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin',\
         'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden',\
         'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
 GROUPS = ['Class Add', 'Class Subtract', 'H2 Physics', 'H2 Mathematics', 'H2 Economics', 'H2 Computing', 'Individual Add', 'Individual Subtract']
 
-d = {
-    'H2 Physics': 'h2_physics',
-    'H2 Mathematics': 'h2_math',
-    'H2 Economics': 'h2_econs',
-    'H2 Computing': 'h2_comp',
-}
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "supersecretkeyjajaja"
+app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///class_funds.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app, session_options={"autoflush": False})
+
+indv_logs = db.Table(
+    'indv_logs',
+    db.Column('user_id', db.Integer, db.ForeignKey('funds.id')),
+    db.Column('log_id', db.Integer, db.ForeignKey('logs.id')),
+)
+
+student_groups = db.Table(
+    'student_groups',
+    db.Column('user_id', db.Integer, db.ForeignKey('funds.id')),
+    db.Column('subject_name', db.String(100), db.ForeignKey('subjects.subject_name'))
+)
+
+class Funds(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    funds = db.Column(db.Integer)
+    groups = db.relationship('Subjects', secondary=student_groups, backref='students')
+    involved_logs = db.relationship('Logs', secondary=indv_logs, backref='involved')
+    def __repr__(self):
+        return f'<Name {self.name}>'
+
+
+class Logs(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    grp = db.Column(db.String(100), nullable=False)
+    amt = db.Column(db.Integer, nullable=False)
+    total_before = db.Column(db.Integer)
+    total_changed = db.Column(db.Integer)
+    total_after = db.Column(db.Integer)
+    num_affected = db.Column(db.Integer)
+    date = db.Column(db.String(100), nullable=False)
+    remarks = db.Column(db.String(100)) 
+
+    def __repr__(self):
+        return f'<Log {self.id}>'
+
+
+class Subjects(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    subject_name = db.Column(db.String(100), nullable=False)
+
+    def __repr__(self):
+        return f'<Subject {self.subject_name}>'
+
 
 class LoginForm(FlaskForm):
     username = StringField("Username", validators=[DataRequired()], render_kw={'placeholder': 'Enter username'})
@@ -35,7 +79,6 @@ class UpdateFundForm(FlaskForm):
     amt = DecimalField("Amount", validators=[DataRequired()], render_kw={'placeholder': 'Amount'})
     rmks = TextAreaField("Remarks", validators=[Length(min=0, max=100)], render_kw={'placeholder': 'Remarks'})
     submit = SubmitField("Update")
-
     
 
 @app.route("/")
@@ -51,24 +94,15 @@ def login():
 
 @app.route("/reset")
 def reset():
-    with sqlite3.connect("class_funds.db") as con:
-        cur = con.cursor()
-        cur.execute("UPDATE class_funds SET funds=0")
-        con.commit()
+    Funds.query.update({Funds.funds: 0})
+    db.session.commit()
     return redirect("/funds")
 
 
 @app.route("/clear")
 def clear():
-    with sqlite3.connect("logs.db") as con2:
-        cur2 = con2.cursor()
-        cur2.execute("DELETE FROM logs")
-        con2.commit()
-    with sqlite3.connect("indv_logs.db") as con2:
-        cur2 = con2.cursor()
-        for name in NAMES:
-            cur2.execute(f"DELETE FROM `{name}`")
-        con2.commit()
+    Logs.query.delete()
+    db.session.commit()
     return redirect("/logs")
 
 
@@ -76,78 +110,81 @@ def clear():
 def funds():
     form = UpdateFundForm()
 
-    with sqlite3.connect("class_funds.db") as con:
-        con.row_factory = sqlite3.Row
-        cur = con.cursor()
+    if form.validate_on_submit():
+        group = form.group.data
+        student_name = form.indiv.data
+        amt = form.amt.data
+        remarks = form.rmks.data
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        if form.validate_on_submit():
-            group = form.group.data
-            student_name = form.indiv.data
-            amt = form.amt.data
-            rmks = form.rmks.data
-            date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        total_before = Funds.query.with_entities(func.sum(Funds.funds).label('total')).first().total
+        #total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
+        amt = int(float(amt)*100)
+        
+        prevs[0] = group
+        prevs[1] = amt
+        prevs[3] = date
 
-            total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
-            amt = float(amt)*100
-            
-            prevs[0] = group
-            prevs[1] = amt
-            prevs[3] = date
+        if group == "Class Add":
+            num_affected = Funds.query.update({Funds.funds: Funds.funds+amt})
+            student_names = NAMES
 
-            if group == "Class Add":
-                cur.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
-                num_affected = len(NAMES)
-                prevs[4] = NAMES
+        elif group == "Class Subtract":
+            num_affected = Funds.query.update({Funds.funds: Funds.funds-amt}) 
+            student_names = NAMES
 
-            elif group == "Class Subtract":
-                cur.execute("UPDATE class_funds SET funds=funds-?", (int(amt),))
-                num_affected = len(NAMES)
-                prevs[4] = NAMES
+        elif group == "Individual Add":
+            prevs[2] = student_name
+            num_affected = Funds.query.where(Funds.name==student_name).update({Funds.funds: Funds.funds+amt})
+            student_names = [student_name]
 
-            elif group == "Individual Add":
-                prevs[2] = student_name
-                cur.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),student_name))
-                num_affected = 1
-                prevs[4] = [student_name]
+        elif group == "Individual Subtract":
+            prevs[2] = student_name
+            num_affected = Funds.query.where(Funds.name==student_name).update({Funds.funds: Funds.funds-amt})
+            student_names = [student_name]
 
-            elif group == "Individual Subtract":
-                prevs[2] = student_name
-                cur.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),student_name))
-                num_affected = 1
-                prevs[4] = [student_name]
+        else:
+            subject = Subjects.query.where(Subjects.subject_name==group).first();
+            student_names = [s.name for s in subject.students]
+            num_affected = Funds.query.where(Funds.groups.contains(subject)).update({Funds.funds: Funds.funds-amt})
+        
 
-            else:
-                grp = d[group]
-                students = [di["id"] for di in cur.execute(f"SELECT id FROM {grp}").fetchall()]
-                cur.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
-                num_affected = len(students)
-                prevs[4] = [di["name"] for di in cur.execute(f"SELECT name FROM {grp}").fetchall()]
-            
+        total_after = Funds.query.with_entities(func.sum(Funds.funds).label('total')).first().total
 
-            total_after = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
+        db.session.commit()
 
-            con.commit()
+        new_log = Logs(
+            grp = group,
+            amt = amt,
+            total_before = total_before,
+            total_changed = total_after-total_before,
+            total_after = total_after,
+            num_affected = num_affected,
+            date = date,
+            remarks=remarks
+        )
+        
+        #Add this update into logs
+        db.session.add(new_log)
+        db.session.commit()
 
-            with sqlite3.connect("logs.db") as con2:
-                con2.row_factory = sqlite3.Row
-                cur2 = con2.cursor()
-                cur2.execute("INSERT INTO logs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                                (None, group, amt, num_affected*amt, total_before, total_after, num_affected, date, rmks))
-                log_id = cur2.execute(f"SELECT id FROM logs WHERE date=?", (date,)).fetchone()["id"]
-                con2.commit()
-            
-            with sqlite3.connect("indv_logs.db") as con3:
-                con3.row_factory = sqlite3.Row
-                cur3 = con3.cursor()
-                for name in prevs[4]:
-                    cur3.execute(f"INSERT INTO `{name}` VALUES (?)", (log_id,))
-                con3.commit()
+        
+        new_log.involved = []
+        db.session.commit()
 
-            redirect("/funds")
-            flash("Successfully updated values.", "alert-success")
+        #Make relational db for individual logs
+        for q in Funds.query.where(Funds.name.in_(student_names)).all():
+            new_log.involved.append(q)
+        
+        print(new_log.involved)
+        
+        db.session.commit()
+
+        redirect("/funds")
+        flash("Successfully updated values.", "alert-success")
 
 
-    funds = cur.execute("SELECT * FROM class_funds").fetchall()
+    funds = Funds.query.all()
 
     return render_template("class_funds.html", form=form, funds=funds, groups=GROUPS, names=NAMES)
 
@@ -159,85 +196,56 @@ def undo():
 
     group = prevs[0]
     amt = -prevs[1]
-    name = prevs[2]
+    student_name = prevs[2]
     date = prevs[3]
-    student_names = prevs[4]
 
-    with sqlite3.connect("class_funds.db") as con:
-        con.row_factory = sqlite3.Row
-        cur = con.cursor()
-        
-        if group == "Class Add":
-            con.execute("UPDATE class_funds SET funds=funds+?", (int(amt),))
-        elif group == "Class Subtract":
-            con.execute("UPDATE class_funds SET funds=funds-?", (int(amt),))
+    if group == "Class Add":
+        Funds.query.update({Funds.funds: Funds.funds+amt})
 
-        elif group == "Individual Add":
-            con.execute("UPDATE class_funds SET funds=funds+? WHERE name=?", (int(amt),name))
+    elif group == "Class Subtract":
+        Funds.query.update({Funds.funds: Funds.funds-amt}) 
 
-        elif group == "Individual Subtract":
-            con.execute("UPDATE class_funds SET funds=funds-? WHERE name=?", (int(amt),name))
+    elif group == "Individual Add":
+        Funds.query.where(Funds.name==student_name).update({Funds.funds: Funds.funds+amt})
 
-        else:
-            subject = d[group]
-            students = [di["id"] for di in cur.execute(f"SELECT id from {subject}").fetchall()]
-            con.executemany("UPDATE class_funds SET funds=funds-? WHERE id=?", ([int(amt), id] for id in students))
-        
-        con.commit()
+    elif group == "Individual Subtract":
+        Funds.query.where(Funds.name==student_name).update({Funds.funds: Funds.funds-amt})
 
-    with sqlite3.connect("logs.db") as con2:
-        con2.row_factory = sqlite3.Row
-        cur2 = con2.cursor()
-        log_id = cur2.execute(f"SELECT id FROM logs WHERE date=?", (date,)).fetchone()["id"]
-        cur2.execute("DELETE FROM logs WHERE date=?", (date,))
-        con2.commit()
-    
-    with sqlite3.connect("indv_logs.db") as con3:
-        con3.row_factory = sqlite3.Row
-        cur3 = con3.cursor()
-        for name in student_names:
-            cur3.execute(f"DELETE FROM `{name}` WHERE logs_id=?", (log_id,))
-        con3.commit()
+    else:
+        subject = Subjects.query.where(Subjects.subject_name==group).first();
+        Funds.query.where(Funds.groups.contains(subject)).update({Funds.funds: Funds.funds-amt})
+
+
+    #Delete logs for this update
+    Logs.query.where(Logs.date==date).delete()
+    db.session.commit()
+
     
     return redirect("/funds")
 
 
 @app.route("/edit", methods=["GET", "POST"])
 def edit():
-    with sqlite3.connect("class_funds.db") as con:
-        con.row_factory = sqlite3.Row
-        cur = con.cursor()
-        students_h2_phy = [di["id"] for di in cur.execute("SELECT id from h2_physics").fetchall()]
-        students_h2_math = [di["id"] for di in cur.execute("SELECT id from h2_math").fetchall()]
-        students_h2_econs = [di["id"] for di in cur.execute("SELECT id from h2_econs").fetchall()]
-        students_h2_comp = [di["id"] for di in cur.execute("SELECT id from h2_comp").fetchall()]
+    
+    subjects = Subjects.query.all()
+    funds = Funds.query.all()
+    
+    if request.method == "POST":
+        for sbj in subjects:
+            student_list = request.form.getlist('_'.join(sbj.subject_name.split()))
+            print(student_list)
+            sbj.students = []
+            db.session.commit()
+            students = Funds.query.where(Funds.id.in_(student_list)).all()
+            for student in students:
+                sbj.students.append(student)
 
-        if request.method == "POST":
-            students_h2_phy = request.form.getlist('h2_physics', type=int)
-            students_h2_math = request.form.getlist('h2_math', type=int)
-            students_h2_econs = request.form.getlist('h2_econs', type=int)
-            students_h2_comp = request.form.getlist('h2_comp', type=int)
-            con.execute("DELETE FROM h2_physics")
-            con.executemany("INSERT INTO h2_physics VALUES (?, ?)", ([id, NAMES[id-1]] for id in students_h2_phy))
-            con.execute("DELETE FROM h2_math")
-            con.executemany("INSERT INTO h2_math VALUES (?, ?)", ([id, NAMES[id-1]] for id in students_h2_math))
-            con.execute("DELETE FROM h2_econs")
-            con.executemany("INSERT INTO h2_econs VALUES (?, ?)", ([id, NAMES[id-1]] for id in students_h2_econs))
-            con.execute("DELETE FROM h2_comp")
-            con.executemany("INSERT INTO h2_comp VALUES (?, ?)", ([id, NAMES[id-1]] for id in students_h2_comp))
-            
-            con.commit()
+    return render_template("edit.html", names=NAMES, subjects=subjects, funds=funds)
 
-    return render_template("edit.html", names=NAMES, students_h2_phy=students_h2_phy, students_h2_math=students_h2_math, students_h2_econs=students_h2_econs, students_h2_comp=students_h2_comp)
-
-
+    
 @app.route("/logs", methods=["GET", "POST"])
 def logs():
-    with sqlite3.connect("logs.db") as con2:
-        con2.row_factory = sqlite3.Row
-        cur2 = con2.cursor()
-        logs = cur2.execute("SELECT * from logs").fetchall()
-        logs.sort(key=lambda item: item["id"], reverse=True)
+    logs = Logs.query.order_by(Logs.id.desc()).all()
     return render_template("logs.html", logs=logs)
 
 
@@ -249,19 +257,9 @@ def indv_logs():
         if name not in NAMES:
             flash('Error! Invalid student name.', 'alert-danger')
         else:
-            with sqlite3.connect("indv_logs.db") as con3:
-                con3.row_factory = sqlite3.Row
-                cur3 = con3.cursor()
-                indv_logs = [log_id["logs_id"] for log_id in cur3.execute(f"SELECT logs_id from `{name}`").fetchall()]
-                print(indv_logs)
-                indv_logs.sort(reverse=True)
-                
-                with sqlite3.connect("logs.db") as con2:
-                    con2.row_factory = sqlite3.Row
-                    cur2 = con2.cursor()
-                    for indv_log in indv_logs:
-                        log = cur2.execute(f"SELECT grp, amt, date, remarks from logs WHERE id=?", (indv_log,)).fetchone()
-                        indv_logs_list.append(log)
+            student = Funds.query.where(Funds.name==name).first()
+            indv_logs_list = Logs.query.where(Logs.involved.contains(student)).all()
+            
     return render_template("indv_logs.html", names=NAMES, indv_logs_list=indv_logs_list)
 
 
