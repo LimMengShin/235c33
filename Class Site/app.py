@@ -258,7 +258,7 @@ def indv_logs():
             flash('Error! Invalid student name.', 'alert-danger')
         else:
             student = Funds.query.where(Funds.name==name).first()
-            indv_logs_list = Logs.query.where(Logs.involved.contains(student)).all()
+            indv_logs_list = Logs.query.where(Logs.involved.contains(student)).order_by(Logs.id.desc()).all()
             
     return render_template("indv_logs.html", names=NAMES, indv_logs_list=indv_logs_list)
 
