@@ -12,7 +12,7 @@ prevs = ["", 0, "", ""] # group, amt, name, date
 NAMES = ['Amelia', 'Gillian', 'Louissa', 'Yong Jia', 'Isis', 'Winona', 'Maydalynn', 'Min Jia', 'Nuo Xin', 'Yi Xin', 'Justin',\
         'Toby', 'Ethan', 'Zhong Yu', 'Kingster', 'Jun Rui', 'Xiang Ling', 'Hua Yu', 'Javier', 'Meng Shin', 'Matthew', 'Cayden',\
         'Reidon', 'Yun Hao', 'Nicholas', 'Theodore', 'Xander', 'Aaron']
-GROUPS = ['Class Add', 'Class Subtract', 'H2 Physics', 'H2 Mathematics', 'H2 Economics', 'H2 Computing', 'Individual Add', 'Individual Subtract']
+GROUPS = ['Class Add', 'Class Subtract', 'H2 Physics', 'H2 Math', 'H2 Economics', 'H2 Computing', 'Individual Add', 'Individual Subtract']
 
 
 app = Flask(__name__)
@@ -112,6 +112,7 @@ def funds():
 
     if form.validate_on_submit():
         group = form.group.data
+        print(f"Group: {group}")
         student_name = form.indiv.data
         amt = form.amt.data
         remarks = form.rmks.data
