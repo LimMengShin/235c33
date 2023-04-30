@@ -119,7 +119,7 @@ def funds():
         date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         total_before = Funds.query.with_entities(func.sum(Funds.funds).label('total')).first().total
-        #total_before = cur.execute("SELECT SUM(funds) FROM class_funds").fetchone()["SUM(funds)"]
+        
         amt = int(float(amt)*100)
         
         prevs[0] = group
@@ -147,7 +147,7 @@ def funds():
         else:
             subject = Subjects.query.where(Subjects.subject_name==group).first();
             student_names = [s.name for s in subject.students]
-            num_affected = Funds.query.where(Funds.groups.contains(subject)).update({Funds.funds: Funds.funds-amt})
+            num_affected = Funds.query.where(Funds.name.in_(student_names)).update({Funds.funds: Funds.funds-amt})
         
 
         total_after = Funds.query.with_entities(func.sum(Funds.funds).label('total')).first().total
@@ -177,7 +177,6 @@ def funds():
         for q in Funds.query.where(Funds.name.in_(student_names)).all():
             new_log.involved.append(q)
         
-        print(new_log.involved)
         
         db.session.commit()
 
@@ -214,8 +213,8 @@ def undo():
 
     else:
         subject = Subjects.query.where(Subjects.subject_name==group).first();
-        Funds.query.where(Funds.groups.contains(subject)).update({Funds.funds: Funds.funds-amt})
-
+        student_names = [s.name for s in subject.students]
+        Funds.query.where(Funds.name.in_(student_names)).update({Funds.funds: Funds.funds-amt})
 
     #Delete logs for this update
     Logs.query.where(Logs.date==date).delete()
