@@ -167,15 +167,12 @@ def funds():
         
         #Add this update into logs
         db.session.add(new_log)
-        db.session.commit()
-
-        
         new_log.involved = []
         db.session.commit()
 
         #Make relational db for individual logs
         for q in Funds.query.where(Funds.name.in_(student_names)).all():
-            new_log.involved.append(q)
+            q.involved_logs.append(new_log)
         
         
         db.session.commit()
@@ -258,7 +255,7 @@ def indv_logs():
             flash('Error! Invalid student name.', 'alert-danger')
         else:
             student = Funds.query.where(Funds.name==name).first()
-            indv_logs_list = Logs.query.where(Logs.involved.contains(student)).order_by(Logs.id.desc()).all()
+            indv_logs_list = reversed(student.involved_logs)
             
     return render_template("indv_logs.html", names=NAMES, indv_logs_list=indv_logs_list)
 
