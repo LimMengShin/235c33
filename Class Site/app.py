@@ -275,9 +275,11 @@ def edit():
             student_list = request.form.getlist('_'.join(sbj.subject_name.split()))
             sbj.students = []
             db.session.commit()
+            
             students = Funds.query.where(Funds.id.in_(student_list)).all()
             for student in students:
                 sbj.students.append(student)
+            db.session.commit()
 
     return render_template("edit.html", names=NAMES, subjects=subjects, funds=funds)
 
