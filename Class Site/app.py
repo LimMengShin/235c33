@@ -4,7 +4,8 @@ from sqlalchemy.sql import func
 from flask_wtf import FlaskForm
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from wtforms import SubmitField, PasswordField, StringField, TextAreaField, SelectField, DecimalField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Length
+from wtforms.validators import InputRequired, Length
+from flask_bcrypt import Bcrypt
 from datetime import datetime
 
 
@@ -23,6 +24,8 @@ app.config["SQLALCHEMY_BINDS"] = {
 }
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app, session_options={"autoflush": False})
+
+bcrypt = Bcrypt(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -81,20 +84,20 @@ class Users(db.Model, UserMixin):
     __bind_key__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), nullable=False, unique=True)
-    password = db.Column(db.String(20), nullable=False)
+    password = db.Column(db.String(100), nullable=False)
 
 
 class LoginForm(FlaskForm):
-    username = StringField("Username", validators=[DataRequired()], render_kw={'placeholder': 'Enter username'})
-    password = PasswordField("Password", validators=[DataRequired()], render_kw={'placeholder': 'Enter Password'})
+    username = StringField("Username", validators=[InputRequired(), Length(min=4, max=20)], render_kw={'placeholder': 'Enter username'})
+    password = PasswordField("Password", validators=[InputRequired(), Length(min=4, max=20)], render_kw={'placeholder': 'Enter Password'})
     remember_me = BooleanField("Remember me")
     submit = SubmitField("Login")
 
 
 class UpdateFundForm(FlaskForm):
-    group = SelectField("Select a group", choices=[(sbj, sbj) for sbj in GROUPS], validators=[DataRequired()], render_kw={'onchange': 'getOption()'})
+    group = SelectField("Select a group", choices=[(sbj, sbj) for sbj in GROUPS], validators=[InputRequired()], render_kw={'onchange': 'getOption()'})
     indiv = SelectField("Select a student", choices=[(name, name) for name in NAMES])
-    amt = DecimalField("Amount", validators=[DataRequired()], render_kw={'placeholder': 'Amount'})
+    amt = DecimalField("Amount", validators=[InputRequired()], render_kw={'placeholder': 'Amount'})
     rmks = TextAreaField("Remarks", validators=[Length(min=0, max=100)], render_kw={'placeholder': 'Remarks'})
     submit = SubmitField("Update")
     
@@ -112,7 +115,7 @@ def login():
     if form.validate_on_submit():
         user = Users.query.filter_by(username=form.username.data).first()
         if user:
-            if user.password == form.password.data:
+            if bcrypt.check_password_hash(user.password, form.password.data):
                 if form.remember_me.data:
                     login_user(user, remember=True)
                 else:
