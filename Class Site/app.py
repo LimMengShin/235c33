@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 from flask_wtf import FlaskForm
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from wtforms import SubmitField, PasswordField, StringField, TextAreaField, SelectField, DecimalField, SubmitField, BooleanField
+from wtforms import SubmitField, PasswordField, StringField, TextAreaField, SelectField, DecimalField, BooleanField
 from wtforms.validators import InputRequired, Length
 from flask_bcrypt import Bcrypt
 from datetime import datetime
@@ -116,15 +116,12 @@ def login():
         user = Users.query.filter_by(username=form.username.data).first()
         if user:
             if bcrypt.check_password_hash(user.password, form.password.data):
-                if form.remember_me.data:
-                    login_user(user, remember=True)
-                else:
-                    login_user(user, remember=False)
+                login_user(user, remember=form.remember_me.data)
                 return redirect("/funds")
             else:
-                flash("Wrong password.", "alert-danger")
+                flash("Incorrect username or password.", "alert-danger")
         else:
-            flash("Wrong username.", "alert-danger")
+            flash("Incorrect username or password.", "alert-danger")
     return render_template("login.html", form=form)
 
 
@@ -157,7 +154,6 @@ def funds():
 
     if form.validate_on_submit():
         group = form.group.data
-        print(f"Group: {group}")
         student_name = form.indiv.data
         amt = form.amt.data
         remarks = form.rmks.data
@@ -277,7 +273,6 @@ def edit():
     if request.method == "POST":
         for sbj in subjects:
             student_list = request.form.getlist('_'.join(sbj.subject_name.split()))
-            print(student_list)
             sbj.students = []
             db.session.commit()
             students = Funds.query.where(Funds.id.in_(student_list)).all()
