@@ -121,6 +121,10 @@ def login():
                 else:
                     login_user(user, remember=False)
                 return redirect("/funds")
+            else:
+                flash("Wrong password.", "alert-danger")
+        else:
+            flash("Wrong username.", "alert-danger")
     return render_template("login.html", form=form)
 
 
