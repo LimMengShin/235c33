@@ -38,7 +38,7 @@
                   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     {% if current_user.is_authenticated %}admin{% else %}student{% endif %}
                   </a>
-                  <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                  <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                     <a class="dropdown-item" href="{% if current_user.is_authenticated %}/logout{% else %}/login{% endif %}">{% if current_user.is_authenticated %}Logout{% else %}Login{% endif %}</a>
                     <a class="dropdown-item" href="/indv-logs">View History</a>
                     {% if current_user.is_authenticated %}
