@@ -18,8 +18,19 @@ GROUPS = ['Class Add', 'Class Subtract', 'H2 Physics', 'H2 Math', 'H2 Economics'
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "supersecretkeyjajaja"
 app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///class_funds.db'
+app.config["SQLALCHEMY_BINDS"] = {
+    'users': 'sqlite:///users.db'
+}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app, session_options={"autoflush": False})
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
 
 indv_logs = db.Table(
     'indv_logs',
@@ -66,6 +77,13 @@ class Subjects(db.Model):
         return f'<Subject {self.subject_name}>'
 
 
+class Users(db.Model, UserMixin):
+    __bind_key__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), nullable=False, unique=True)
+    password = db.Column(db.String(20), nullable=False)
+
+
 class LoginForm(FlaskForm):
     username = StringField("Username", validators=[DataRequired()], render_kw={'placeholder': 'Enter username'})
     password = PasswordField("Password", validators=[DataRequired()], render_kw={'placeholder': 'Enter Password'})
@@ -89,7 +107,23 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
+    if form.validate_on_submit():
+        user = Users.query.filter_by(username=form.username.data).first()
+        if user:
+            if user.password == form.password.data:
+                if form.remember_me.data:
+                    login_user(user, remember=True)
+                else:
+                    login_user(user, remember=False)
+                return redirect("/funds")
     return render_template("login.html", form=form)
+
+
+@app.route("/logout", methods=["GET", "POST"])
+@login_required
+def logout():
+    logout_user()
+    return redirect("/login")
 
 
 @app.route("/reset")
