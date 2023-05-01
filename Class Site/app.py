@@ -106,6 +106,8 @@ def index():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect("/funds")
     form = LoginForm()
     if form.validate_on_submit():
         user = Users.query.filter_by(username=form.username.data).first()
@@ -127,6 +129,7 @@ def logout():
 
 
 @app.route("/reset")
+@login_required
 def reset():
     Funds.query.update({Funds.funds: 0})
     db.session.commit()
@@ -134,6 +137,7 @@ def reset():
 
 
 @app.route("/clear")
+@login_required
 def clear():
     Logs.query.delete()
     db.session.commit()
@@ -221,6 +225,7 @@ def funds():
 
 
 @app.route("/undo", methods=["POST", "GET"])
+@login_required
 def undo():
     if request.method == 'GET':
         abort(404)
@@ -256,6 +261,7 @@ def undo():
 
 
 @app.route("/edit", methods=["GET", "POST"])
+@login_required
 def edit():
     
     subjects = Subjects.query.all()

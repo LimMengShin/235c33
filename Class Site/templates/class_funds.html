@@ -48,6 +48,9 @@ onload="getOption()"
         </tbody>
     </table>
 </div>
+
+{% if current_user.is_authenticated %}
+
 <div class="submission">
     <form action="/funds" method="post" class="form">
         {{ form.hidden_tag() }}
@@ -73,6 +76,8 @@ onload="getOption()"
         </div>
     </form>
 </div>
+
+{% endif %}
 
 <div class="clearfix"></div>
 

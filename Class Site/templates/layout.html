@@ -27,9 +27,11 @@
                 <li class="nav-item {% if url_for(request.endpoint)=='/indv-logs' %}active{% endif %}">
                   <a class="nav-link" href="/indv-logs">Individual Logs</a>
                 </li>
+                {% if current_user.is_authenticated %}
                 <li class="nav-item {% if url_for(request.endpoint)=='/edit' %}active{% endif %}">
                   <a class="nav-link" href="/edit">Edit</a>
                 </li>
+                {% endif %}
               </ul>
               <ul class="navbar-nav ml-auto">
                 <li class="nav-item dropdown">
@@ -39,8 +41,10 @@
                   <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                     <a class="dropdown-item" href="{% if current_user.is_authenticated %}/logout{% else %}/login{% endif %}">{% if current_user.is_authenticated %}Logout{% else %}Login{% endif %}</a>
                     <a class="dropdown-item" href="/indv-logs">View History</a>
+                    {% if current_user.is_authenticated %}
                     <a class="dropdown-item" href="/reset">Reset Funds</a>
                     <a class="dropdown-item" href="/clear">Clear Log</a>
+                    {% endif %}
                   </div>
                 </li>
               </ul>
