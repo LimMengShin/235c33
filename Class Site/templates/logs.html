@@ -23,10 +23,32 @@ Logs
                     <p>Total after: {{ "${:.2f}".format(log.total_after/100) }}</p>
                     <p>Date: {{ log.date }}</p>
                     <p>Number of people affected: {{ log.num_affected }}</p>
-                    <form action="/logs" class="inline-form form" method="POST">
-                        <input type="hidden" name="LOG_ID" value="{{ log.id }}">
-                        <input class="btn btn-danger" type="submit" value="Delete Log">
-                    </form>
+
+                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#ModalCenter{{log.id}}">
+                        Delete
+                    </button>
+                    <div class="modal fade" id="ModalCenter{{log.id}}">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h5 class="modal-title" id="ModalLongTitle{{log.id}}">Delete Log</h5>
+                              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            <div class="modal-body">
+                              <p>Are you sure you want to delete this log?</p>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                              <form action="/logs" method="post">
+                                <input type="hidden" name="LOG_ID" value="{{ log.id }}">
+                                <input type="submit" value="Delete Log" class="btn btn-danger">
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
