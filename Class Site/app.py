@@ -114,14 +114,9 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = Users.query.filter_by(username=form.username.data).first()
-        if user:
-            if bcrypt.check_password_hash(user.password, form.password.data):
-                login_user(user, remember=form.remember_me.data)
-                return redirect("/funds")
-            else:
-                flash("Incorrect username or password.", "alert-danger")
-        else:
-            flash("Incorrect username or password.", "alert-danger")
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user, remember=form.remember_me.data)
+            return redirect("/funds")
     return render_template("login.html", form=form)
 
 
