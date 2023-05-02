@@ -287,6 +287,13 @@ def edit():
 @app.route("/logs", methods=["GET", "POST"])
 def logs():
     logs = Logs.query.order_by(Logs.id.desc()).all()
+
+    if request.method == 'POST':
+        log_id = request.form.get("LOG_ID")
+        Logs.query.where(Logs.id==log_id).delete()
+        db.session.commit()
+        return redirect("/logs")
+    
     return render_template("logs.html", logs=logs)
 
 

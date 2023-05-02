@@ -23,6 +23,10 @@ Logs
                     <p>Total after: {{ "${:.2f}".format(log.total_after/100) }}</p>
                     <p>Date: {{ log.date }}</p>
                     <p>Number of people affected: {{ log.num_affected }}</p>
+                    <form action="/logs" class="inline-form form" method="POST">
+                        <input type="hidden" name="LOG_ID" value="{{ log.id }}">
+                        <input class="btn btn-danger" type="submit" value="Delete Log">
+                    </form>
                 </div>
             </div>
         </div>
