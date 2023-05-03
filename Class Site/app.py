@@ -66,7 +66,7 @@ class Logs(db.Model):
     total_after = db.Column(db.Integer)
     num_affected = db.Column(db.Integer)
     date = db.Column(db.String(100), nullable=False)
-    remarks = db.Column(db.String(100)) 
+    remarks = db.Column(db.String(100))
 
     def __repr__(self):
         return f'<Log {self.id}>'
@@ -100,7 +100,7 @@ class UpdateFundForm(FlaskForm):
     amt = DecimalField("Amount", validators=[InputRequired()], render_kw={'placeholder': 'Amount'})
     rmks = TextAreaField("Remarks", validators=[Length(min=0, max=100)], render_kw={'placeholder': 'Remarks'})
     submit = SubmitField("Update")
-    
+
 
 @app.route("/")
 def index():
@@ -114,9 +114,14 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = Users.query.filter_by(username=form.username.data).first()
-        if user and bcrypt.check_password_hash(user.password, form.password.data):
-            login_user(user, remember=form.remember_me.data)
-            return redirect("/funds")
+        if user:
+            if bcrypt.check_password_hash(user.password, form.password.data):
+                login_user(user, remember=form.remember_me.data)
+                return redirect("/funds")
+            else:
+                flash("Incorrect username or password.", "alert-danger")
+        else:
+            flash("Incorrect username or password.", "alert-danger")
     return render_template("login.html", form=form)
 
 
@@ -155,9 +160,9 @@ def funds():
         date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         total_before = Funds.query.with_entities(func.sum(Funds.funds).label('total')).first().total
-        
+
         amt = int(float(amt)*100)
-        
+
         prevs[0] = group
         prevs[1] = amt
         prevs[3] = date
@@ -167,7 +172,7 @@ def funds():
             student_names = NAMES
 
         elif group == "Class Subtract":
-            num_affected = Funds.query.update({Funds.funds: Funds.funds-amt}) 
+            num_affected = Funds.query.update({Funds.funds: Funds.funds-amt})
             student_names = NAMES
 
         elif group == "Individual Add":
@@ -184,7 +189,7 @@ def funds():
             subject = Subjects.query.where(Subjects.subject_name==group).first();
             student_names = [s.name for s in subject.students]
             num_affected = Funds.query.where(Funds.name.in_(student_names)).update({Funds.funds: Funds.funds-amt})
-        
+
 
         total_after = Funds.query.with_entities(func.sum(Funds.funds).label('total')).first().total
 
@@ -200,7 +205,7 @@ def funds():
             date = date,
             remarks=remarks
         )
-        
+
         #Add this update into logs
         db.session.add(new_log)
         new_log.involved = []
@@ -209,8 +214,8 @@ def funds():
         #Make relational db for individual logs
         for q in Funds.query.where(Funds.name.in_(student_names)).all():
             q.involved_logs.append(new_log)
-        
-        
+
+
         db.session.commit()
 
         redirect("/funds")
@@ -237,7 +242,7 @@ def undo():
         Funds.query.update({Funds.funds: Funds.funds+amt})
 
     elif group == "Class Subtract":
-        Funds.query.update({Funds.funds: Funds.funds-amt}) 
+        Funds.query.update({Funds.funds: Funds.funds-amt})
 
     elif group == "Individual Add":
         Funds.query.where(Funds.name==student_name).update({Funds.funds: Funds.funds+amt})
@@ -254,23 +259,23 @@ def undo():
     Logs.query.where(Logs.date==date).delete()
     db.session.commit()
 
-    
+
     return redirect("/funds")
 
 
 @app.route("/edit", methods=["GET", "POST"])
 @login_required
 def edit():
-    
+
     subjects = Subjects.query.all()
     funds = Funds.query.all()
-    
+
     if request.method == "POST":
         for sbj in subjects:
             student_list = request.form.getlist('_'.join(sbj.subject_name.split()))
             sbj.students = []
             db.session.commit()
-            
+
             students = Funds.query.where(Funds.id.in_(student_list)).all()
             for student in students:
                 sbj.students.append(student)
@@ -278,7 +283,7 @@ def edit():
 
     return render_template("edit.html", names=NAMES, subjects=subjects, funds=funds)
 
-    
+
 @app.route("/logs", methods=["GET", "POST"])
 def logs():
     logs = Logs.query.order_by(Logs.id.desc()).all()
@@ -288,7 +293,7 @@ def logs():
         Logs.query.where(Logs.id==log_id).delete()
         db.session.commit()
         return redirect("/logs")
-    
+
     return render_template("logs.html", logs=logs)
 
 
@@ -302,7 +307,7 @@ def indv_logs():
         else:
             student = Funds.query.where(Funds.name==name).first()
             indv_logs_list = reversed(student.involved_logs)
-            
+
     return render_template("indv_logs.html", names=NAMES, indv_logs_list=indv_logs_list)
 
 
