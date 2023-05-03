@@ -28,7 +28,7 @@ onload="getOption()"
     {% endwith %}
 </div>
 
-<div id="funds_table">
+<div id="funds_table" class="{{ 'non_admin' if not current_user.is_authenticated }}">
     <table id="fixed_header" class="table-striped table table-bordered">
         <thead>
             <tr>
