@@ -22,6 +22,12 @@ body {
     text-align: left;
 }
 
+.non_admin {
+    width: 80vw !important;
+    float: none !important;
+    margin: 0 auto !important;
+}
+
 #funds_table tbody {
     display: block;
     width: 100%;
