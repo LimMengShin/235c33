@@ -4,3 +4,5 @@ sqlalchemy
 flask_wtf
 flask_login
 wtforms
+flask_bcrypt
+gunicorn==19.7.1
