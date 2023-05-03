@@ -12,7 +12,7 @@ Logs
             <h2 class="accordion-header" id="heading {{ log.id }}">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ log.id }}"
                     aria-expanded="true" aria-controls="collapse{{ log.id }}">
-                    {{ log.grp }} - {{ "${:.2f}".format(log.amt/100) }}
+                    {{ log.grp }}{% if log.involved|length==1 %} ({{log.involved[0].name}}){% endif %} - {{ "${:.2f}".format(log.amt/100) }}
                 </button>
             </h2>
             <div id="collapse{{ log["id"] }}" class="accordion-collapse collapse" aria-labelledby="heading{{ log["id"] }}">
