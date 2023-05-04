@@ -205,6 +205,8 @@ def funds():
 
         #Add this update into logs
         db.session.add(new_log)
+        db.session.commit()
+        
         new_log.involved = []
         db.session.commit()
 
